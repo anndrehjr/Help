@@ -96,7 +96,7 @@ function Dashboard() {
     navigator.clipboard.writeText(message);
     setToast({
       show: true,
-      message: 'Laudo copiado com sucesso!'
+      message: 'Copiado com sucesso!'
     });
   };
 
