@@ -1,0 +1,232 @@
+.dashboard-container {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  overflow: hidden;
+  transition: background-color 0.3s ease;
+}
+
+.dashboard-container.light {
+  background-color: #f3f4f6;
+  color: #1f2937;
+}
+
+.dashboard-container.dark {
+  background-color: #1f2937;
+  color: #f3f4f6;
+}
+
+.gradient-bg {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  z-index: -1;
+}
+
+.gradient-1,
+.gradient-2,
+.gradient-3 {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(80px);
+}
+
+.light .gradient-1 {
+  top: -10%;
+  left: -10%;
+  width: 70%;
+  height: 70%;
+  background: rgba(255, 148, 148, 0.8);
+  animation: move1 8s infinite alternate;
+}
+
+.light .gradient-2 {
+  top: 30%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  background: rgba(255, 182, 193, 0.8);
+  animation: move2 10s infinite alternate;
+}
+
+.light .gradient-3 {
+  bottom: -10%;
+  left: 20%;
+  width: 50%;
+  height: 50%;
+  background: rgba(173, 216, 230, 0.8);
+  animation: move3 12s infinite alternate;
+}
+
+.dark .gradient-1 {
+  top: -10%;
+  left: -10%;
+  width: 70%;
+  height: 70%;
+  background: rgba(76, 29, 149, 0.6);
+  animation: move1 8s infinite alternate;
+}
+
+.dark .gradient-2 {
+  top: 30%;
+  right: -10%;
+  width: 60%;
+  height: 60%;
+  background: rgba(124, 58, 237, 0.6);
+  animation: move2 10s infinite alternate;
+}
+
+.dark .gradient-3 {
+  bottom: -10%;
+  left: 20%;
+  width: 50%;
+  height: 50%;
+  background: rgba(167, 139, 250, 0.6);
+  animation: move3 12s infinite alternate;
+}
+
+@keyframes move1 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(50px, 50px); }
+}
+
+@keyframes move2 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(-50px, -30px); }
+}
+
+@keyframes move3 {
+  0% { transform: translate(0, 0); }
+  100% { transform: translate(30px, -50px); }
+}
+
+.dashboard-nav {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  padding: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.18);
+  transition: all 0.3s ease;
+}
+
+.dark .dashboard-nav {
+  background: rgba(17, 24, 39, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.nav-content {
+  max-width: 1280px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.back-button {
+  display: flex;
+  align-items: center;
+  background: none;
+  border: none;
+  color: inherit;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: opacity 0.3s ease;
+}
+
+.back-button:hover {
+  opacity: 0.8;
+}
+
+.user-info {
+  font-size: 0.9rem;
+}
+
+.dark-mode-toggle {
+  padding: 0.5rem 1rem;
+  background: #7c3aed;
+  border: none;
+  border-radius: 5px;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.dark-mode-toggle:hover {
+  background: #6d28d9;
+}
+
+.dashboard-main {
+  flex: 1;
+  padding: 2rem;
+  max-width: 1280px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.message-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 1rem;
+}
+
+.message-card {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-radius: 10px;
+  padding: 1.5rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.dark .message-card {
+  background: rgba(17, 24, 39, 0.7);
+  border-color: rgba(255, 255, 255, 0.1);
+}
+
+.message-card:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.message-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.message-emoji {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.message-text {
+  font-size: 1rem;
+  font-weight: 500;
+}
+
+@media (max-width: 768px) {
+  .nav-content {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .user-info {
+    text-align: center;
+  }
+
+  .dashboard-main {
+    padding: 1rem;
+  }
+
+  .message-grid {
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  }
+}
+
