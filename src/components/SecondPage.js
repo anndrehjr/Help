@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Sun, Moon, Plus, ArrowLeft, Save, Info, XCircle, HelpCircle } from 'lucide-react';
+import { Sun, Moon, ArrowLeft, Plus, Edit2, Trash2, Save } from 'lucide-react';
+import { Toast } from './Toast';
 import '../styles/SecondPage.css';
 
 const SecondPage = ({ darkMode, toggleDarkMode }) => {
@@ -9,12 +10,25 @@ const SecondPage = ({ darkMode, toggleDarkMode }) => {
   const [showModal, setShowModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newMessage, setNewMessage] = useState('');
+  const [showToast, setShowToast] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
     const savedMessages = JSON.parse(localStorage.getItem('mensagensSalvas') || '[]');
     setMessages(savedMessages);
   }, []);
+
+  const getGreeting = (period) => {
+    switch (period) {
+      case 'manha': return 'Bom dia';
+      case 'tarde': return 'Boa tarde';
+      case 'noite': return 'Boa noite';
+      case 'duvida': return 'Como posso ajudar?';
+      case 'explica': return 'Não consegui entender direito, poderia me explicar melhor? Se preferir pode mandar áudio.';
+      case 'encerrar': return 'Vou estar encerrando o chat aqui então, qualquer coisa estamos à disposição, tenha um ótimo dia! 😊';
+      default: return 'Olá';
+    }
+  };
 
   const copyMessage = (period) => {
     const name = localStorage.getItem('inputName');
@@ -31,20 +45,8 @@ const SecondPage = ({ darkMode, toggleDarkMode }) => {
       : '';
 
     navigator.clipboard.writeText(message)
-      .then(() => alert('Mensagem copiada para a área de transferência!'))
+      .then(() => setShowToast(true))
       .catch(err => alert('Erro ao copiar a mensagem: ' + err));
-  };
-
-  const getGreeting = (period) => {
-    switch (period) {
-      case 'manha': return 'Bom dia';
-      case 'tarde': return 'Boa tarde';
-      case 'noite': return 'Boa noite';
-      case 'duvida': return 'Como posso ajudar?';
-      case 'explica': return 'Não consegui entender direito, poderia me explicar melhor? Se preferir pode mandar áudio.';
-      case 'encerrar': return 'Vou estar encerrando o chat aqui então, qualquer coisa estamos à disposição, tenha um ótimo dia! 😊';
-      default: return 'Olá';
-    }
   };
 
   const addNewMessage = () => {
@@ -85,77 +87,130 @@ const SecondPage = ({ darkMode, toggleDarkMode }) => {
   };
 
   return (
-    <div className={darkMode ? 'dark-mode' : ''}>
-      <div className="barra_de_menu">
-        <button onClick={() => navigate('/')} className="btn">
-          <ArrowLeft />
-        </button>
-        <button onClick={() => setShowModal(true)} className="btn">
-          <Plus /> Adicionar Quadro
-        </button>
-        <div className="btn-container">
-          <button onClick={() => setShowModal(true)} disabled={!selectedMessage}>Editar</button>
-          <button onClick={deleteMessage} disabled={!selectedMessage}>Excluir</button>
+    <div className={`min-h-screen ${darkMode ? 'dark-mode' : ''}`}>
+      <nav className="top-nav">
+        <div className="nav-left">
+          <button 
+            onClick={() => navigate('/')} 
+            className="nav-btn back-btn"
+            title="Voltar para página inicial"
+          >
+            <ArrowLeft className="w-4 h-4 mr-2" />
+            <span>Voltar</span>
+          </button>
         </div>
+        <div className="nav-center">
+          <button 
+            onClick={() => setShowModal(true)} 
+            className="nav-btn action-btn add-btn"
+            title="Adicionar novo quadro"
+          >
+            <Plus className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={() => selectedMessage && setShowModal(true)} 
+            disabled={!selectedMessage}
+            className={`nav-btn action-btn edit-btn ${!selectedMessage ? 'disabled' : ''}`}
+            title="Editar quadro selecionado"
+          >
+            <Edit2 className="w-4 h-4" />
+          </button>
+          <button 
+            onClick={deleteMessage} 
+            disabled={!selectedMessage}
+            className={`nav-btn action-btn delete-btn ${!selectedMessage ? 'disabled' : ''}`}
+            title="Excluir quadro selecionado"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
+        </div>
+        <div className="nav-right">
+          <button 
+            onClick={toggleDarkMode} 
+            className="nav-btn theme-btn"
+            title={darkMode ? "Modo claro" : "Modo escuro"}
+          >
+            {darkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
+      </nav>
+
+      <div className="greeting-buttons">
         <button 
-          onClick={toggleDarkMode} 
-          className="dark-mode-toggle"
+          onClick={() => copyMessage('manha')}
+          className="greeting-btn morning"
         >
-          {darkMode ? <Sun /> : <Moon />}
+          <Sun className="greeting-icon" />
+          <span>Bom dia</span>
+        </button>
+        <button 
+          onClick={() => copyMessage('tarde')}
+          className="greeting-btn afternoon"
+        >
+          <Moon className="greeting-icon" />
+          <span>Boa tarde</span>
+        </button>
+        <button 
+          onClick={() => copyMessage('noite')}
+          className="greeting-btn night"
+        >
+          <Moon className="greeting-icon" />
+          <span>Boa noite</span>
         </button>
       </div>
 
-      <div className="Menu-Mensagens">
-        <button onClick={() => copyMessage('manha')}><Sun /> Bom Dia!</button>
-        <button onClick={() => copyMessage('tarde')}><Moon /> Boa Tarde!</button>
-        <button onClick={() => copyMessage('noite')}><Moon /> Boa Noite!</button>
-        <button onClick={() => copyMessage('duvida')}><HelpCircle /> Pergunta Dúvida</button>
-        <button onClick={() => copyMessage('explica')}><Info /> Explica Melhor</button>
-        <button onClick={() => copyMessage('encerrar')}><XCircle /> Encerrar</button>
-      </div>
-
-      <div id="quadrosContainer" className="quadros-container">
+      <div id="quadrosContainer" className="quadros-container grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 p-4">
         {messages.map((msg, index) => (
           <div
             key={index}
-            className={`quadro ${selectedMessage === msg ? 'selected' : ''}`}
+            className={`quadro p-4 rounded shadow-lg transition-all duration-300 cursor-pointer ${
+              selectedMessage === msg ? 'ring-2 ring-primary' : ''
+            } ${darkMode ? 'bg-gray-800 text-white' : 'bg-white text-gray-800'}`}
             onClick={() => {
               navigator.clipboard.writeText(msg.message);
-              alert('Mensagem copiada!');
+              setShowToast(true);
               setSelectedMessage(msg);
             }}
           >
-            <strong>{msg.title}</strong>
+            <strong className="text-lg">{msg.title}</strong>
           </div>
         ))}
       </div>
 
       {showModal && (
-        <div className="modal">
-          <div className="modal-content">
-            <span className="close-button" onClick={() => setShowModal(false)}>&times;</span>
+        <div className="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+          <div className="modal-content bg-white dark:bg-gray-800 p-6 rounded-lg w-full max-w-md">
+            <span className="close-button absolute top-2 right-2 text-2xl cursor-pointer" onClick={() => setShowModal(false)}>&times;</span>
             <input
               placeholder="Digite o título aqui..."
               maxLength={30}
               value={newTitle}
               onChange={(e) => setNewTitle(e.target.value)}
+              className="w-full p-2 mb-4 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
             <textarea
               rows={4}
-              cols={30}
               placeholder="Digite sua mensagem aqui (máximo 200 caracteres)..."
               maxLength={200}
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
+              className="w-full p-2 mb-4 rounded border border-gray-300 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
             />
-            <button onClick={selectedMessage ? editMessage : addNewMessage}>
-              <Save /> {selectedMessage ? 'Salvar Edição' : 'Salvar Mensagem'}
+            <button 
+              onClick={selectedMessage ? editMessage : addNewMessage}
+              className="w-full p-2 bg-primary text-white rounded hover:bg-primary-dark transition-all duration-300 flex items-center justify-center"
+            >
+              <Save className="mr-2" /> {selectedMessage ? 'Salvar Edição' : 'Salvar Mensagem'}
             </button>
           </div>
         </div>
       )}
 
-      <footer>© Andre Junior ~ Dev</footer>
+      <Toast 
+        message="Mensagem copiada com sucesso!" 
+        visible={showToast} 
+        onClose={() => setShowToast(false)} 
+      />
     </div>
   );
 };
