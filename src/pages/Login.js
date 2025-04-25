@@ -1,8 +1,9 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTheme } from "../contexts/ThemeContext"
+import { User, Lock, Sun, Moon } from 'lucide-react'
 import "./Login.css"
 
 // Senha fixa para todos os usuários
@@ -12,8 +13,18 @@ function Login() {
   const [username, setUsername] = useState("")
   const [password, setPassword] = useState("")
   const [error, setError] = useState("")
+  const [avatarUrl, setAvatarUrl] = useState("")
   const navigate = useNavigate()
   const { isDarkMode, toggleDarkMode } = useTheme()
+
+  useEffect(() => {
+    // Gerar um avatar aleatório baseado no nome de usuário
+    if (username.trim()) {
+      setAvatarUrl(`https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(username)}`)
+    } else {
+      setAvatarUrl(`https://api.dicebear.com/7.x/shapes/svg?seed=${Math.random()}`)
+    }
+  }, [username])
 
   const handleSubmit = (e) => {
     e.preventDefault()
@@ -52,11 +63,19 @@ function Login() {
 
       <form onSubmit={handleSubmit} className="login-form">
         <div className="form-content">
-          <h1>Bem Vindo!</h1>
+          <div className="login-header">
+            <div className="avatar-container">
+              {avatarUrl && <img src={avatarUrl || "/placeholder.svg"} alt="Avatar" className="user-avatar" />}
+            </div>
+            <h1>Bem Vindo!</h1>
+          </div>
 
           {error && <div className="error-message">{error}</div>}
 
           <div className="input-group">
+            <div className="input-icon">
+              <User size={18} />
+            </div>
             <input
               type="text"
               value={username}
@@ -67,6 +86,9 @@ function Login() {
           </div>
 
           <div className="input-group">
+            <div className="input-icon">
+              <Lock size={18} />
+            </div>
             <input
               type="password"
               value={password}
@@ -82,7 +104,7 @@ function Login() {
             Entrar
           </button>
           <button type="button" onClick={toggleDarkMode} className="dark-mode-toggle">
-            {isDarkMode ? "Modo Claro" : "Modo Escuro"}
+            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
           </button>
         </div>
       </form>

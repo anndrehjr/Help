@@ -2,19 +2,24 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, Plus, Edit, Trash2 } from "lucide-react"
+import { Plus, Edit, Trash2, Building2 } from 'lucide-react'
 import { useTheme } from "../contexts/ThemeContext"
+import Navbar from "../components/Navbar"
+import Toast from "../components/Toast"
 import "./Companies.css"
 
 function Companies() {
   const [companies, setCompanies] = useState([])
   const [username, setUsername] = useState("")
   const [isModalOpen, setIsModalOpen] = useState(false)
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false)
   const [newCompanyName, setNewCompanyName] = useState("")
+  const [bulkCompanies, setBulkCompanies] = useState("")
   const [editingCompany, setEditingCompany] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
+  const [toast, setToast] = useState({ show: false, message: "" })
   const navigate = useNavigate()
-  const { isDarkMode, toggleDarkMode } = useTheme()
+  const { isDarkMode } = useTheme()
 
   useEffect(() => {
     // Verificar se o usuário está logado
@@ -29,7 +34,30 @@ function Companies() {
     // Carregar empresas do usuário
     const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
     const userCompanies = allCompanies[currentUser] || []
-    setCompanies(userCompanies)
+    
+    // Contar cards para cada empresa (incluindo multi-empresa)
+    const companiesWithCardCounts = userCompanies.map(company => {
+      // Cards específicos da empresa
+      const companyCards = company.cards || [];
+      
+      // Procurar cards multi-empresa que incluem esta empresa
+      let multiCompanyCardCount = 0;
+      userCompanies.forEach(otherCompany => {
+        if (otherCompany.id !== company.id) {
+          const multiCards = (otherCompany.cards || []).filter(
+            card => card.multiCompany && card.companies && card.companies.includes(company.id)
+          );
+          multiCompanyCardCount += multiCards.length;
+        }
+      });
+      
+      return {
+        ...company,
+        totalCardCount: companyCards.length + multiCompanyCardCount
+      };
+    });
+    
+    setCompanies(companiesWithCardCounts);
 
     // Simular carregamento
     setTimeout(() => {
@@ -48,6 +76,11 @@ function Companies() {
     setIsModalOpen(true)
   }
 
+  const openBulkImportModal = () => {
+    setBulkCompanies("")
+    setIsBulkImportOpen(true)
+  }
+
   const openEditModal = (company, e) => {
     e.stopPropagation()
     setEditingCompany(company)
@@ -61,6 +94,11 @@ function Companies() {
     setEditingCompany(null)
   }
 
+  const closeBulkImportModal = () => {
+    setIsBulkImportOpen(false)
+    setBulkCompanies("")
+  }
+
   const saveCompany = () => {
     if (!newCompanyName.trim()) return
 
@@ -72,21 +110,61 @@ function Companies() {
         company.id === editingCompany.id ? { ...company, name: newCompanyName } : company,
       )
       setCompanies(updatedCompanies)
-      allCompanies[username] = updatedCompanies
+      allCompanies[username] = updatedCompanies.map(({totalCardCount, ...rest}) => rest) // Remove o campo totalCardCount
     } else {
       // Adicionar nova empresa
       const newCompany = {
         id: Date.now(),
         name: newCompanyName,
         cards: [],
+        totalCardCount: 0
       }
       const updatedCompanies = [...companies, newCompany]
       setCompanies(updatedCompanies)
-      allCompanies[username] = updatedCompanies
+      allCompanies[username] = updatedCompanies.map(({totalCardCount, ...rest}) => rest) // Remove o campo totalCardCount
     }
 
     localStorage.setItem("companies", JSON.stringify(allCompanies))
     closeModal()
+
+    setToast({
+      show: true,
+      message: editingCompany ? "Empresa atualizada com sucesso!" : "Empresa adicionada com sucesso!",
+    })
+  }
+
+  const saveBulkCompanies = () => {
+    if (!bulkCompanies.trim()) return
+
+    const companyNames = bulkCompanies
+      .split("\n")
+      .map((name) => name.trim())
+      .filter((name) => name.length > 0)
+
+    if (companyNames.length === 0) return
+
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
+    const existingNames = new Set(companies.map((company) => company.name.toLowerCase()))
+
+    const newCompanies = companyNames
+      .filter((name) => !existingNames.has(name.toLowerCase()))
+      .map((name) => ({
+        id: Date.now() + Math.floor(Math.random() * 1000),
+        name,
+        cards: [],
+      }))
+
+    const updatedCompanies = [...companies, ...newCompanies.map(company => ({...company, totalCardCount: 0}))]
+    setCompanies(updatedCompanies)
+    allCompanies[username] = updatedCompanies.map(({totalCardCount, ...rest}) => rest) // Remove o campo totalCardCount
+    localStorage.setItem("companies", JSON.stringify(allCompanies))
+
+    closeBulkImportModal()
+
+    setToast({
+      show: true,
+      message: `${newCompanies.length} empresas importadas com sucesso!`,
+    })
   }
 
   const deleteCompany = (companyId, e) => {
@@ -97,14 +175,22 @@ function Companies() {
       setCompanies(updatedCompanies)
 
       const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-      allCompanies[username] = updatedCompanies
+      allCompanies[username] = updatedCompanies.map(({totalCardCount, ...rest}) => rest) // Remove o campo totalCardCount
       localStorage.setItem("companies", JSON.stringify(allCompanies))
+
+      setToast({
+        show: true,
+        message: "Empresa excluída com sucesso!",
+      })
     }
   }
 
   const navigateToDashboard = (company) => {
+    // Remover o campo totalCardCount antes de salvar no localStorage
+    const { totalCardCount, ...companyToSave } = company;
+    
     // Salvar a empresa atual no localStorage
-    localStorage.setItem("currentCompany", JSON.stringify(company))
+    localStorage.setItem("currentCompany", JSON.stringify(companyToSave))
     navigate("/dashboard")
   }
 
@@ -116,31 +202,25 @@ function Companies() {
         <div className="gradient-3"></div>
       </div>
 
-      <nav className="companies-nav">
-        <div className="nav-content">
-          <button onClick={handleLogout} className="back-button">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Sair
-          </button>
-          <div className="user-info">
-            <span>Usuário: {username}</span>
-          </div>
-          <button onClick={toggleDarkMode} className="dark-mode-toggle">
-            {isDarkMode ? "Modo Claro" : "Modo Escuro"}
-          </button>
-        </div>
-      </nav>
+      <Navbar title="Minhas Empresas" showBackButton={false} userData={{ nome: username }} />
 
       <main className="companies-main">
-        <h1 className="companies-title">Minhas Empresas</h1>
+        <div className="companies-actions">
+          <button onClick={openBulkImportModal} className="bulk-import-button">
+            Importar Empresas em Lote
+          </button>
+        </div>
 
         <div className={`companies-grid ${isLoading ? "loading" : "loaded"}`}>
           {companies.map((company) => (
             <div key={company.id} className="company-card" onClick={() => navigateToDashboard(company)}>
+              <div className="company-icon">
+                <Building2 size={24} />
+              </div>
               <div className="company-content">
                 <span className="company-name">{company.name}</span>
                 <div className="company-info">
-                  <span>{company.cards?.length || 0} cards</span>
+                  <span>{company.totalCardCount || 0} cards</span>
                 </div>
               </div>
               <div className="card-actions">
@@ -181,6 +261,31 @@ function Companies() {
           </div>
         </div>
       )}
+
+      {isBulkImportOpen && (
+        <div className="modal-overlay">
+          <div className="modal bulk-modal">
+            <h2>Importar Empresas em Lote</h2>
+            <p className="bulk-instructions">Digite o nome de cada empresa em uma linha separada:</p>
+            <textarea
+              placeholder="Empresa 1&#10;Empresa 2&#10;Empresa 3"
+              value={bulkCompanies}
+              onChange={(e) => setBulkCompanies(e.target.value)}
+              rows={10}
+              className="bulk-textarea"
+              autoFocus
+            />
+            <div className="modal-actions">
+              <button onClick={closeBulkImportModal}>Cancelar</button>
+              <button onClick={saveBulkCompanies}>Importar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="toast-list">
+        {toast.show && <Toast message={toast.message} onClose={() => setToast({ ...toast, show: false })} />}
+      </div>
     </div>
   )
 }
