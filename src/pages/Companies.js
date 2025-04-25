@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Edit, Trash2, Building2 } from 'lucide-react'
+import { Plus, Edit, Trash2, Building2 } from "lucide-react"
 import { useTheme } from "../contexts/ThemeContext"
 import Navbar from "../components/Navbar"
 import Toast from "../components/Toast"
@@ -18,6 +18,7 @@ function Companies() {
   const [editingCompany, setEditingCompany] = useState(null)
   const [isLoading, setIsLoading] = useState(true)
   const [toast, setToast] = useState({ show: false, message: "" })
+  const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, companyId: null })
   const navigate = useNavigate()
   const { isDarkMode } = useTheme()
 
@@ -34,30 +35,30 @@ function Companies() {
     // Carregar empresas do usuário
     const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
     const userCompanies = allCompanies[currentUser] || []
-    
+
     // Contar cards para cada empresa (incluindo multi-empresa)
-    const companiesWithCardCounts = userCompanies.map(company => {
+    const companiesWithCardCounts = userCompanies.map((company) => {
       // Cards específicos da empresa
-      const companyCards = company.cards || [];
-      
+      const companyCards = company.cards || []
+
       // Procurar cards multi-empresa que incluem esta empresa
-      let multiCompanyCardCount = 0;
-      userCompanies.forEach(otherCompany => {
+      let multiCompanyCardCount = 0
+      userCompanies.forEach((otherCompany) => {
         if (otherCompany.id !== company.id) {
           const multiCards = (otherCompany.cards || []).filter(
-            card => card.multiCompany && card.companies && card.companies.includes(company.id)
-          );
-          multiCompanyCardCount += multiCards.length;
+            (card) => card.multiCompany && card.companies && card.companies.includes(company.id),
+          )
+          multiCompanyCardCount += multiCards.length
         }
-      });
-      
+      })
+
       return {
         ...company,
-        totalCardCount: companyCards.length + multiCompanyCardCount
-      };
-    });
-    
-    setCompanies(companiesWithCardCounts);
+        totalCardCount: companyCards.length + multiCompanyCardCount,
+      }
+    })
+
+    setCompanies(companiesWithCardCounts)
 
     // Simular carregamento
     setTimeout(() => {
@@ -110,18 +111,18 @@ function Companies() {
         company.id === editingCompany.id ? { ...company, name: newCompanyName } : company,
       )
       setCompanies(updatedCompanies)
-      allCompanies[username] = updatedCompanies.map(({totalCardCount, ...rest}) => rest) // Remove o campo totalCardCount
+      allCompanies[username] = updatedCompanies.map(({ totalCardCount, ...rest }) => rest) // Remove o campo totalCardCount
     } else {
       // Adicionar nova empresa
       const newCompany = {
         id: Date.now(),
         name: newCompanyName,
         cards: [],
-        totalCardCount: 0
+        totalCardCount: 0,
       }
       const updatedCompanies = [...companies, newCompany]
       setCompanies(updatedCompanies)
-      allCompanies[username] = updatedCompanies.map(({totalCardCount, ...rest}) => rest) // Remove o campo totalCardCount
+      allCompanies[username] = updatedCompanies.map(({ totalCardCount, ...rest }) => rest) // Remove o campo totalCardCount
     }
 
     localStorage.setItem("companies", JSON.stringify(allCompanies))
@@ -154,9 +155,9 @@ function Companies() {
         cards: [],
       }))
 
-    const updatedCompanies = [...companies, ...newCompanies.map(company => ({...company, totalCardCount: 0}))]
+    const updatedCompanies = [...companies, ...newCompanies.map((company) => ({ ...company, totalCardCount: 0 }))]
     setCompanies(updatedCompanies)
-    allCompanies[username] = updatedCompanies.map(({totalCardCount, ...rest}) => rest) // Remove o campo totalCardCount
+    allCompanies[username] = updatedCompanies.map(({ totalCardCount, ...rest }) => rest) // Remove o campo totalCardCount
     localStorage.setItem("companies", JSON.stringify(allCompanies))
 
     closeBulkImportModal()
@@ -167,28 +168,41 @@ function Companies() {
     })
   }
 
-  const deleteCompany = (companyId, e) => {
+  // Função para abrir o modal de confirmação de exclusão
+  const confirmDeleteCompany = (companyId, e) => {
     e.stopPropagation()
+    setDeleteConfirmation({ show: true, companyId })
+  }
 
-    if (window.confirm("Tem certeza que deseja excluir esta empresa?")) {
-      const updatedCompanies = companies.filter((company) => company.id !== companyId)
-      setCompanies(updatedCompanies)
+  // Função para cancelar a exclusão
+  const cancelDelete = () => {
+    setDeleteConfirmation({ show: false, companyId: null })
+  }
 
-      const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-      allCompanies[username] = updatedCompanies.map(({totalCardCount, ...rest}) => rest) // Remove o campo totalCardCount
-      localStorage.setItem("companies", JSON.stringify(allCompanies))
+  // Função para confirmar e executar a exclusão
+  const executeDelete = () => {
+    const companyId = deleteConfirmation.companyId
+    if (!companyId) return
 
-      setToast({
-        show: true,
-        message: "Empresa excluída com sucesso!",
-      })
-    }
+    const updatedCompanies = companies.filter((company) => company.id !== companyId)
+    setCompanies(updatedCompanies)
+
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
+    allCompanies[username] = updatedCompanies.map(({ totalCardCount, ...rest }) => rest) // Remove o campo totalCardCount
+    localStorage.setItem("companies", JSON.stringify(allCompanies))
+
+    setDeleteConfirmation({ show: false, companyId: null })
+
+    setToast({
+      show: true,
+      message: "Empresa excluída com sucesso!",
+    })
   }
 
   const navigateToDashboard = (company) => {
     // Remover o campo totalCardCount antes de salvar no localStorage
-    const { totalCardCount, ...companyToSave } = company;
-    
+    const { totalCardCount, ...companyToSave } = company
+
     // Salvar a empresa atual no localStorage
     localStorage.setItem("currentCompany", JSON.stringify(companyToSave))
     navigate("/dashboard")
@@ -227,7 +241,7 @@ function Companies() {
                 <button onClick={(e) => openEditModal(company, e)} className="edit-button">
                   <Edit size={16} />
                 </button>
-                <button onClick={(e) => deleteCompany(company.id, e)} className="delete-button">
+                <button onClick={(e) => confirmDeleteCompany(company.id, e)} className="delete-button">
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -278,6 +292,23 @@ function Companies() {
             <div className="modal-actions">
               <button onClick={closeBulkImportModal}>Cancelar</button>
               <button onClick={saveBulkCompanies}>Importar</button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmação de exclusão */}
+      {deleteConfirmation.show && (
+        <div className="modal-overlay">
+          <div className="modal delete-modal">
+            <h2>Confirmar Exclusão</h2>
+            <p>Tem certeza que deseja excluir esta empresa?</p>
+            <p className="delete-warning">Esta ação não pode ser desfeita.</p>
+            <div className="modal-actions">
+              <button onClick={cancelDelete}>Cancelar</button>
+              <button onClick={executeDelete} className="delete-confirm-button">
+                Excluir
+              </button>
             </div>
           </div>
         </div>

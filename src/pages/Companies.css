@@ -339,17 +339,26 @@
   opacity: 0.8;
 }
 
+/* Modificar a opacidade inicial dos botões de ação para que sejam sempre visíveis */
 .card-actions {
   position: absolute;
   top: 1rem;
   right: 1rem;
   display: flex;
   gap: 0.5rem;
+  /* Remover a opacidade 0 inicial e a transição */
+  opacity: 1;
 }
 
+/* Não precisamos mais desta regra já que os botões serão sempre visíveis */
+/* .company-card:hover .card-actions {
+  opacity: 1;
+} */
+
+/* Melhorar o contraste dos botões para que sejam mais visíveis */
 .edit-button,
 .delete-button {
-  background: rgba(240, 240, 240, 0.2);
+  background: rgba(255, 255, 255, 0.5);
   border: none;
   border-radius: 50%;
   width: 32px;
@@ -359,19 +368,25 @@
   justify-content: center;
   cursor: pointer;
   color: inherit;
-  opacity: 0.7;
   transition: all 0.3s ease;
 }
 
 .dark .edit-button,
 .dark .delete-button {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
+/* Melhorar o efeito de hover para dar feedback visual */
 .edit-button:hover,
 .delete-button:hover {
   opacity: 1;
   transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.dark .edit-button:hover,
+.dark .delete-button:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 .add-card {
@@ -518,6 +533,44 @@
 
 .modal-actions button:hover {
   transform: translateY(-2px);
+}
+
+/* Estilos para o modal de confirmação de exclusão */
+.delete-modal {
+  max-width: 400px;
+}
+
+.delete-modal p {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.delete-warning {
+  color: #ef4444;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.dark .delete-warning {
+  color: #f87171;
+}
+
+.delete-confirm-button {
+  background: #ef4444 !important;
+}
+
+.delete-confirm-button:hover {
+  background: #dc2626 !important;
+  box-shadow: 0 5px 15px rgba(239, 68, 68, 0.4) !important;
+}
+
+.dark .delete-confirm-button {
+  background: #ef4444 !important;
+}
+
+.dark .delete-confirm-button:hover {
+  background: #dc2626 !important;
 }
 
 @media (max-width: 768px) {

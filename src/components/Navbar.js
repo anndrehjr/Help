@@ -1,52 +1,67 @@
 "use client"
 
 import { useNavigate } from "react-router-dom"
-import { ArrowLeft, Sun, Moon } from 'lucide-react'
 import { useTheme } from "../contexts/ThemeContext"
+import { Moon, Sun } from "lucide-react"
+import "./Navbar.css"
 
-function Navbar({ title, showBackButton = true, userData = {}, userCompanies = [], currentCompany, onCompanyChange }) {
+function Navbar({
+  title,
+  showBackButton = true,
+  userData = {},
+  userCompanies = [],
+  currentCompany = null,
+  onCompanyChange = null,
+}) {
   const navigate = useNavigate()
   const { isDarkMode, toggleDarkMode } = useTheme()
 
-  return (
-    <nav className="dashboard-nav">
-      <div className="nav-content">
-        {showBackButton && (
-          <button onClick={() => navigate("/companies")} className="back-button">
-            <ArrowLeft className="h-5 w-5 mr-2" />
-            Voltar para Empresas
-          </button>
-        )}
+  const handleLogout = () => {
+    // Remove o usuário atual e redireciona para a tela de login
+    localStorage.removeItem("currentUser")
+    navigate("/")
+  }
 
-        <h1 className="nav-title">{title}</h1>
+  const handleBack = () => {
+    navigate(-1)
+  }
+
+  return (
+    <nav className={`dashboard-nav ${isDarkMode ? "dark" : "light"}`}>
+      <div className="nav-content">
+        <div className="nav-title-container">
+          {showBackButton && (
+            <button className="back-button" onClick={handleBack}>
+              Voltar
+            </button>
+          )}
+          <h1 className="nav-title">{title}</h1>
+        </div>
 
         <div className="nav-actions">
-          {currentCompany && userCompanies.length > 0 && (
+          {userCompanies.length > 0 && currentCompany && onCompanyChange && (
             <div className="company-dropdown">
               <label htmlFor="company-select">Empresa:</label>
               <select
                 id="company-select"
-                value={currentCompany?.id}
-                onChange={(e) => onCompanyChange(e.target.value)}
                 className="company-select"
+                value={currentCompany.id}
+                onChange={(e) => onCompanyChange(e.target.value)}
               >
-                {userCompanies.map((comp) => (
-                  <option key={comp.id} value={comp.id}>
-                    {comp.name}
+                {userCompanies.map((company) => (
+                  <option key={company.id} value={company.id}>
+                    {company.name}
                   </option>
                 ))}
               </select>
             </div>
           )}
-
-          {userData.nome && (
-            <div className="user-info">
-              <span>Usuário: {userData.nome}</span>
-            </div>
-          )}
-
-          <button onClick={toggleDarkMode} className="dark-mode-toggle" aria-label={isDarkMode ? "Modo Claro" : "Modo Escuro"}>
-            {isDarkMode ? <Sun size={18} /> : <Moon size={18} />}
+          <span className="user-info">{userData.nome}</span>
+          <button className="dark-mode-toggle" onClick={toggleDarkMode}>
+            {isDarkMode ? <Sun size={20} /> : <Moon size={20} />}
+          </button>
+          <button onClick={handleLogout} className="login-button">
+            Sair
           </button>
         </div>
       </div>

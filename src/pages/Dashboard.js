@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Edit, Trash2 } from "lucide-react"
+import { Plus, Edit, Trash2, Upload } from 'lucide-react'
 import { useTheme } from "../contexts/ThemeContext"
 import Navbar from "../components/Navbar"
 import Toast from "../components/Toast"
@@ -14,6 +14,8 @@ function Dashboard() {
   const [customCards, setCustomCards] = useState([])
   const [isModalOpen, setIsModalOpen] = useState(false)
   const [isMultiCompanyModalOpen, setIsMultiCompanyModalOpen] = useState(false)
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false) // Novo estado para o modal de importação em lote
+  const [bulkCards, setBulkCards] = useState("") // Novo estado para armazenar o texto dos cards em lote
   const [currentCard, setCurrentCard] = useState({
     id: null,
     title: "",
@@ -145,7 +147,7 @@ function Dashboard() {
           message = `Boa tarde! Aqui é o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`
           break
         case "noite":
-          message = `Boa noite! Aqui �� o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`
+          message = `Boa noite! Aqui é o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`
           break
         case "duvida":
           message = "Como posso ajudar?"
@@ -250,6 +252,12 @@ function Dashboard() {
     setIsMultiCompanyModalOpen(true)
   }
 
+  // Função para abrir o modal de importação em lote
+  const openBulkImportModal = () => {
+    setBulkCards("")
+    setIsBulkImportOpen(true)
+  }
+
   const closeModal = () => {
     setIsModalOpen(false)
     setCurrentCard({
@@ -277,6 +285,12 @@ function Dashboard() {
       multiCompany: false,
       companies: [],
     })
+  }
+
+  // Função para fechar o modal de importação em lote
+  const closeBulkImportModal = () => {
+    setIsBulkImportOpen(false)
+    setBulkCards("")
   }
 
   const saveCard = () => {
@@ -403,6 +417,116 @@ function Dashboard() {
     setToast({
       show: true,
       message: "Card multi-empresa adicionado com sucesso!",
+    })
+  }
+
+  // Função para processar e salvar os cards em lote
+  const saveBulkCards = () => {
+    if (!bulkCards.trim()) return
+
+    const currentUser = localStorage.getItem("currentUser")
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
+    const userCompanies = allCompanies[currentUser] || []
+
+    // Dividir o texto em linhas
+    const lines = bulkCards.split("\n").filter(line => line.trim().length > 0)
+    
+    if (lines.length === 0) return
+
+    // Array para armazenar os novos cards
+    const newCards = []
+    
+    // Processar cada linha para criar um card
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i].trim()
+      
+      // Verificar se a linha tem conteúdo
+      if (line.length === 0) continue
+      
+      // Extrair título e mensagem
+      // O formato esperado é: "Título: Mensagem" ou apenas "Título"
+      let title, message
+      
+      if (line.includes(":")) {
+        // Se tiver ":", divide em título e mensagem
+        const parts = line.split(":")
+        title = parts[0].trim()
+        message = parts.slice(1).join(":").trim()
+      } else {
+        // Se não tiver ":", considera tudo como título
+        title = line
+        message = ""
+      }
+      
+      // Se não tiver título, pula
+      if (!title) continue
+      
+      // Se não tiver mensagem, verifica se a próxima linha pode ser a mensagem
+      if (!message && i + 1 < lines.length && !lines[i + 1].includes(":")) {
+        message = lines[i + 1].trim()
+        i++ // Avança para pular a linha da mensagem
+      }
+      
+      // Criar o novo card
+      newCards.push({
+        id: Date.now() + Math.floor(Math.random() * 1000) + i,
+        title: title,
+        message: message || "Sem descrição",
+        category: "geral",
+        color: "#8b5cf6",
+        icon: "MessageSquare",
+        favorite: false,
+        usageCount: 0,
+        multiCompany: false,
+        companies: [],
+      })
+    }
+    
+    if (newCards.length === 0) {
+      setToast({
+        show: true,
+        message: "Nenhum card válido encontrado no texto.",
+      })
+      return
+    }
+
+    // Atualizar os cards da empresa atual
+    const updatedCompanies = userCompanies.map((comp) => {
+      if (comp.id === company.id) {
+        // Adicionar os novos cards à empresa atual
+        const updatedCards = [...(comp.cards || []), ...newCards]
+        return { ...comp, cards: updatedCards }
+      }
+      return comp
+    })
+
+    // Atualizar no localStorage
+    allCompanies[currentUser] = updatedCompanies
+    localStorage.setItem("companies", JSON.stringify(allCompanies))
+
+    // Atualizar a empresa atual no localStorage
+    const updatedCompany = updatedCompanies.find((c) => c.id === company.id)
+    localStorage.setItem("currentCompany", JSON.stringify(updatedCompany))
+    setCompany(updatedCompany)
+
+    // Atualizar os cards na interface
+    const companyCards = updatedCompany.cards || []
+
+    // Carregar cards multi-empresa
+    const multiCompanyCards = []
+    updatedCompanies.forEach((comp) => {
+      if (comp.id !== company.id) {
+        const multiCards = (comp.cards || []).filter((card) => card.multiCompany && card.companies.includes(company.id))
+        multiCompanyCards.push(...multiCards)
+      }
+    })
+
+    setCustomCards([...companyCards, ...multiCompanyCards])
+    closeBulkImportModal()
+
+    setToast({
+      show: true,
+      message: `${newCards.length} cards importados com sucesso!`,
     })
   }
 
@@ -574,6 +698,9 @@ function Dashboard() {
         if (isMultiCompanyModalOpen) {
           closeMultiCompanyModal()
         }
+        if (isBulkImportOpen) {
+          closeBulkImportModal()
+        }
         if (deleteConfirmation.show) {
           cancelDelete()
         }
@@ -584,7 +711,7 @@ function Dashboard() {
     return () => {
       window.removeEventListener("keydown", handleKeyDown)
     }
-  }, [isModalOpen, isMultiCompanyModalOpen, deleteConfirmation.show])
+  }, [isModalOpen, isMultiCompanyModalOpen, isBulkImportOpen, deleteConfirmation.show])
 
   const categories = [
     { id: "all", name: "Todos" },
@@ -694,6 +821,10 @@ function Dashboard() {
           </div>
 
           <div className="card-actions-container">
+            <button onClick={openBulkImportModal} className="bulk-import-button">
+              <Upload size={16} className="icon-left" />
+              Importar Cards em Lote
+            </button>
             <button onClick={openMultiCompanyModal} className="multi-company-button">
               Criar Card Multi-Empresa
             </button>
@@ -860,7 +991,7 @@ function Dashboard() {
 
       {isMultiCompanyModalOpen && (
         <div className="modal-overlay">
-          <div className="modal card-modal">
+          <div className="modal card-modal multi-company-modal">
             <h2>Criar Card Multi-Empresa</h2>
 
             <div className="form-group">
@@ -950,6 +1081,39 @@ function Dashboard() {
               <button onClick={saveMultiCompanyCard} disabled={selectedCompanies.length === 0}>
                 Salvar
               </button>
+            </div>
+            <div className="modal-tip">Pressione ESC para cancelar</div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de importação em lote */}
+      {isBulkImportOpen && (
+        <div className="modal-overlay">
+          <div className="modal bulk-modal">
+            <h2>Importar Cards em Lote</h2>
+            <p className="bulk-instructions">
+              Digite o título e a descrição de cada card, um por linha. Formato:
+              <br />
+              <code>Título: Descrição</code>
+              <br />
+              Ou em linhas separadas:
+              <br />
+              <code>Título</code>
+              <br />
+              <code>Descrição</code>
+            </p>
+            <textarea
+              placeholder="Bom dia: Bom dia, tudo bem?&#10;Boa tarde&#10;Boa tarde, como posso ajudar?&#10;Agradecimento: Obrigado pelo contato!"
+              value={bulkCards}
+              onChange={(e) => setBulkCards(e.target.value)}
+              rows={10}
+              className="bulk-textarea"
+              autoFocus
+            />
+            <div className="modal-actions">
+              <button onClick={closeBulkImportModal}>Cancelar</button>
+              <button onClick={saveBulkCards}>Importar</button>
             </div>
             <div className="modal-tip">Pressione ESC para cancelar</div>
           </div>

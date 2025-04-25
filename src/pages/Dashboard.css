@@ -217,7 +217,7 @@
   cursor: pointer;
   min-width: 180px;
   appearance: none;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width  width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%238b5cf6' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
   background-repeat: no-repeat;
   background-position: right 0.5rem center;
   padding-right: 2rem;
@@ -338,6 +338,31 @@
 .dark .category-button:hover:not(.active) {
   background: rgba(139, 92, 246, 0.15);
   border-color: rgba(139, 92, 246, 0.4);
+}
+
+/* Adicionar estilos para o botão de importação em lote */
+.bulk-import-button {
+  padding: 0.75rem 1.5rem;
+  background: #8b5cf6; /* Purple-500 */
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  margin-right: 1rem;
+  display: flex;
+  align-items: center;
+}
+
+.bulk-import-button:hover {
+  background: #7c3aed; /* Purple-600 */
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.4);
+  transform: translateY(-2px);
+}
+
+.icon-left {
+  margin-right: 0.5rem;
 }
 
 .card-actions-container {
@@ -589,18 +614,21 @@
   right: 0.75rem;
   display: flex;
   gap: 0.5rem;
-  opacity: 0;
-  transition: opacity 0.3s ease;
-}
-
-.message-card:hover .card-actions {
+  /* Remover a opacidade 0 inicial */
   opacity: 1;
+  transition: transform 0.3s ease;
 }
 
+/* Não precisamos mais desta regra já que os botões serão sempre visíveis */
+/* .message-card:hover .card-actions {
+  opacity: 1;
+} */
+
+/* Melhorar o contraste dos botões para que sejam mais visíveis */
 .edit-button,
 .delete-button,
 .favorite-button {
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.5);
   border: none;
   border-radius: 50%;
   width: 28px;
@@ -616,22 +644,21 @@
 .dark .edit-button,
 .dark .delete-button,
 .dark .favorite-button {
-  background: rgba(0, 0, 0, 0.3);
+  background: rgba(255, 255, 255, 0.3);
 }
 
-.favorite-button {
-  font-size: 1.2rem;
-  line-height: 1;
-}
-
-.favorite-button.active {
-  color: #e53e3e;
-}
-
+/* Melhorar o efeito de hover para dar feedback visual */
 .edit-button:hover,
 .delete-button:hover,
 .favorite-button:hover {
   transform: scale(1.1);
+  background: rgba(255, 255, 255, 0.8);
+}
+
+.dark .edit-button:hover,
+.dark .delete-button:hover,
+.dark .favorite-button:hover {
+  background: rgba(255, 255, 255, 0.5);
 }
 
 /* Add card */
@@ -686,6 +713,12 @@
 .card-modal {
   max-width: 600px;
   width: 90%;
+}
+
+/* Modo retrato para o modal multi-empresa */
+.multi-company-modal {
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 .dark .modal {
@@ -880,6 +913,42 @@
   font-size: 0.8rem;
   opacity: 0.7;
   margin-top: 1rem;
+}
+
+/* Estilos para o modal de importação em lote */
+.bulk-modal {
+  max-width: 600px;
+}
+
+.bulk-instructions {
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  opacity: 0.8;
+  line-height: 1.6;
+}
+
+.bulk-instructions code {
+  background: rgba(139, 92, 246, 0.1);
+  padding: 0.2rem 0.4rem;
+  border-radius: 4px;
+  font-family: monospace;
+}
+
+.bulk-textarea {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ccc;
+  border-radius: 8px;
+  font-size: 1rem;
+  margin-bottom: 1.5rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.dark .bulk-textarea {
+  background: #374151;
+  border-color: #4b5563;
+  color: white;
 }
 
 /* Responsive design */
