@@ -1,8 +1,8 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { useNavigate } from "react-router-dom"
-import { Plus, Edit, Trash2, Building2 } from "lucide-react"
+import { Plus, Edit, Trash2, Building2, CheckSquare, Square, X } from "lucide-react"
 import { useTheme } from "../contexts/ThemeContext"
 import Navbar from "../components/Navbar"
 import Toast from "../components/Toast"
@@ -19,8 +19,17 @@ function Companies() {
   const [isLoading, setIsLoading] = useState(true)
   const [toast, setToast] = useState({ show: false, message: "" })
   const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, companyId: null })
+  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false)
+  const [selectedCompanies, setSelectedCompanies] = useState([])
+  const [multiDeleteConfirmation, setMultiDeleteConfirmation] = useState(false)
   const navigate = useNavigate()
   const { isDarkMode } = useTheme()
+
+  // Refs para os botões de confirmação em cada modal
+  const saveCompanyButtonRef = useRef(null)
+  const saveBulkButtonRef = useRef(null)
+  const deleteButtonRef = useRef(null)
+  const multiDeleteButtonRef = useRef(null)
 
   useEffect(() => {
     // Verificar se o usuário está logado
@@ -65,6 +74,68 @@ function Companies() {
       setIsLoading(false)
     }, 800)
   }, [navigate])
+
+  // Função para lidar com teclas pressionadas no documento
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Modal de adicionar/editar empresa
+      if (isModalOpen) {
+        if (e.key === "Enter") {
+          e.preventDefault()
+          saveCompany()
+        } else if (e.key === "Escape") {
+          e.preventDefault()
+          closeModal()
+        }
+      }
+
+      // Modal de importação em lote
+      if (isBulkImportOpen) {
+        if (e.key === "Enter" && e.ctrlKey) {
+          e.preventDefault()
+          saveBulkCompanies()
+        } else if (e.key === "Escape") {
+          e.preventDefault()
+          closeBulkImportModal()
+        }
+      }
+
+      // Modal de confirmação de exclusão individual
+      if (deleteConfirmation.show) {
+        if (e.key === "Enter") {
+          e.preventDefault()
+          executeDelete()
+        } else if (e.key === "Escape") {
+          e.preventDefault()
+          cancelDelete()
+        }
+      }
+
+      // Modal de confirmação de exclusão múltipla
+      if (multiDeleteConfirmation) {
+        if (e.key === "Enter") {
+          e.preventDefault()
+          executeMultiDelete()
+        } else if (e.key === "Escape") {
+          e.preventDefault()
+          cancelMultiDelete()
+        }
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown)
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown)
+    }
+  }, [
+    isModalOpen,
+    isBulkImportOpen,
+    deleteConfirmation,
+    multiDeleteConfirmation,
+    newCompanyName,
+    bulkCompanies,
+    selectedCompanies,
+  ])
 
   const handleLogout = () => {
     localStorage.removeItem("currentUser")
@@ -170,7 +241,7 @@ function Companies() {
 
   // Função para abrir o modal de confirmação de exclusão
   const confirmDeleteCompany = (companyId, e) => {
-    e.stopPropagation()
+    if (e) e.stopPropagation()
     setDeleteConfirmation({ show: true, companyId })
   }
 
@@ -199,7 +270,62 @@ function Companies() {
     })
   }
 
+  // Funções para exclusão múltipla
+  const toggleMultiSelectMode = () => {
+    setIsMultiSelectMode(!isMultiSelectMode)
+    setSelectedCompanies([])
+  }
+
+  const toggleCompanySelection = (companyId, e) => {
+    e.stopPropagation()
+
+    if (selectedCompanies.includes(companyId)) {
+      setSelectedCompanies(selectedCompanies.filter((id) => id !== companyId))
+    } else {
+      setSelectedCompanies([...selectedCompanies, companyId])
+    }
+  }
+
+  const confirmMultiDelete = () => {
+    if (selectedCompanies.length === 0) {
+      setToast({
+        show: true,
+        message: "Selecione pelo menos uma empresa para excluir",
+      })
+      return
+    }
+
+    setMultiDeleteConfirmation(true)
+  }
+
+  const cancelMultiDelete = () => {
+    setMultiDeleteConfirmation(false)
+  }
+
+  const executeMultiDelete = () => {
+    if (selectedCompanies.length === 0) return
+
+    const updatedCompanies = companies.filter((company) => !selectedCompanies.includes(company.id))
+    setCompanies(updatedCompanies)
+
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
+    allCompanies[username] = updatedCompanies.map(({ totalCardCount, ...rest }) => rest) // Remove o campo totalCardCount
+    localStorage.setItem("companies", JSON.stringify(allCompanies))
+
+    setMultiDeleteConfirmation(false)
+    setIsMultiSelectMode(false)
+    setSelectedCompanies([])
+
+    setToast({
+      show: true,
+      message: `${selectedCompanies.length} empresas excluídas com sucesso!`,
+    })
+  }
+
   const navigateToDashboard = (company) => {
+    // No modo de seleção múltipla, não navegamos para o dashboard
+    if (isMultiSelectMode) return
+
     // Remover o campo totalCardCount antes de salvar no localStorage
     const { totalCardCount, ...companyToSave } = company
 
@@ -223,11 +349,43 @@ function Companies() {
           <button onClick={openBulkImportModal} className="bulk-import-button">
             Importar Empresas em Lote
           </button>
+
+          {isMultiSelectMode ? (
+            <div className="multi-select-actions">
+              <button onClick={toggleMultiSelectMode} className="cancel-button">
+                <X size={16} /> Cancelar
+              </button>
+              <button
+                onClick={confirmMultiDelete}
+                className="delete-multi-button"
+                disabled={selectedCompanies.length === 0}
+              >
+                <Trash2 size={16} /> Excluir Selecionadas ({selectedCompanies.length})
+              </button>
+            </div>
+          ) : (
+            <button onClick={toggleMultiSelectMode} className="multi-select-button">
+              <CheckSquare size={16} /> Excluir Múltiplas Empresas
+            </button>
+          )}
         </div>
 
         <div className={`companies-grid ${isLoading ? "loading" : "loaded"}`}>
           {companies.map((company) => (
-            <div key={company.id} className="company-card" onClick={() => navigateToDashboard(company)}>
+            <div
+              key={company.id}
+              className={`company-card ${isMultiSelectMode && selectedCompanies.includes(company.id) ? "selected" : ""}`}
+              onClick={() =>
+                isMultiSelectMode
+                  ? toggleCompanySelection(company.id, { stopPropagation: () => {} })
+                  : navigateToDashboard(company)
+              }
+            >
+              {isMultiSelectMode && (
+                <div className="selection-checkbox" onClick={(e) => toggleCompanySelection(company.id, e)}>
+                  {selectedCompanies.includes(company.id) ? <CheckSquare size={20} /> : <Square size={20} />}
+                </div>
+              )}
               <div className="company-icon">
                 <Building2 size={24} />
               </div>
@@ -237,29 +395,34 @@ function Companies() {
                   <span>{company.totalCardCount || 0} cards</span>
                 </div>
               </div>
-              <div className="card-actions">
-                <button onClick={(e) => openEditModal(company, e)} className="edit-button">
-                  <Edit size={16} />
-                </button>
-                <button onClick={(e) => confirmDeleteCompany(company.id, e)} className="delete-button">
-                  <Trash2 size={16} />
-                </button>
-              </div>
+              {!isMultiSelectMode && (
+                <div className="card-actions">
+                  <button onClick={(e) => openEditModal(company, e)} className="edit-button">
+                    <Edit size={16} />
+                  </button>
+                  <button onClick={(e) => confirmDeleteCompany(company.id, e)} className="delete-button">
+                    <Trash2 size={16} />
+                  </button>
+                </div>
+              )}
             </div>
           ))}
 
-          <div className="company-card add-card" onClick={openAddModal}>
-            <div className="company-content">
-              <Plus size={24} />
-              <span className="company-name">Adicionar Empresa</span>
+          {!isMultiSelectMode && (
+            <div className="company-card add-card" onClick={openAddModal}>
+              <div className="company-content">
+                <Plus size={24} />
+                <span className="company-name">Adicionar Empresa</span>
+              </div>
             </div>
-          </div>
+          )}
         </div>
       </main>
 
+      {/* Modal de adicionar/editar empresa */}
       {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal">
+        <div className="modal-overlay" onClick={closeModal}>
+          <div className="modal" onClick={(e) => e.stopPropagation()}>
             <h2>{editingCompany ? "Editar Empresa" : "Nova Empresa"}</h2>
             <input
               type="text"
@@ -270,15 +433,18 @@ function Companies() {
             />
             <div className="modal-actions">
               <button onClick={closeModal}>Cancelar</button>
-              <button onClick={saveCompany}>Salvar</button>
+              <button onClick={saveCompany} ref={saveCompanyButtonRef}>
+                Salvar
+              </button>
             </div>
           </div>
         </div>
       )}
 
+      {/* Modal de importação em lote */}
       {isBulkImportOpen && (
-        <div className="modal-overlay">
-          <div className="modal bulk-modal">
+        <div className="modal-overlay" onClick={closeBulkImportModal}>
+          <div className="modal bulk-modal" onClick={(e) => e.stopPropagation()}>
             <h2>Importar Empresas em Lote</h2>
             <p className="bulk-instructions">Digite o nome de cada empresa em uma linha separada:</p>
             <textarea
@@ -291,22 +457,46 @@ function Companies() {
             />
             <div className="modal-actions">
               <button onClick={closeBulkImportModal}>Cancelar</button>
-              <button onClick={saveBulkCompanies}>Importar</button>
+              <button onClick={saveBulkCompanies} ref={saveBulkButtonRef}>
+                Importar
+              </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* Modal de confirmação de exclusão */}
+      {/* Modal de confirmação de exclusão individual */}
       {deleteConfirmation.show && (
-        <div className="modal-overlay">
-          <div className="modal delete-modal">
+        <div className="modal-overlay" onClick={cancelDelete}>
+          <div className="modal delete-modal" onClick={(e) => e.stopPropagation()}>
             <h2>Confirmar Exclusão</h2>
             <p>Tem certeza que deseja excluir esta empresa?</p>
             <p className="delete-warning">Esta ação não pode ser desfeita.</p>
             <div className="modal-actions">
               <button onClick={cancelDelete}>Cancelar</button>
-              <button onClick={executeDelete} className="delete-confirm-button">
+              <button onClick={executeDelete} className="delete-confirm-button" ref={deleteButtonRef} autoFocus>
+                Excluir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de confirmação de exclusão múltipla */}
+      {multiDeleteConfirmation && (
+        <div className="modal-overlay" onClick={cancelMultiDelete}>
+          <div className="modal delete-modal" onClick={(e) => e.stopPropagation()}>
+            <h2>Confirmar Exclusão Múltipla</h2>
+            <p>Tem certeza que deseja excluir {selectedCompanies.length} empresas?</p>
+            <p className="delete-warning">Esta ação não pode ser desfeita.</p>
+            <div className="modal-actions">
+              <button onClick={cancelMultiDelete}>Cancelar</button>
+              <button
+                onClick={executeMultiDelete}
+                className="delete-confirm-button"
+                ref={multiDeleteButtonRef}
+                autoFocus
+              >
                 Excluir
               </button>
             </div>

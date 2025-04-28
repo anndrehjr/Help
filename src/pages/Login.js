@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
 import { useTheme } from "../contexts/ThemeContext"
-import { User, Lock, Sun, Moon } from 'lucide-react'
+import { User, Lock, Sun, Moon } from "lucide-react"
 import "./Login.css"
 
 // Senha fixa para todos os usuários
@@ -80,6 +80,7 @@ function Login() {
               type="text"
               value={username}
               onChange={(e) => setUsername(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
               placeholder="Nome de usuário"
               required
             />
@@ -93,6 +94,7 @@ function Login() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
+              onKeyDown={(e) => e.key === "Enter" && handleSubmit(e)}
               placeholder="Senha"
               required
             />

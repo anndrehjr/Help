@@ -459,3 +459,98 @@
     padding: 1.5rem;
   }
 }
+/* Adicione estes estilos ao seu arquivo Companies.css */
+
+/* Estilos para o modo de seleção múltipla */
+.multi-select-button,
+.delete-multi-button,
+.cancel-button {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.multi-select-button {
+  padding: 0.75rem 1.5rem;
+  background: #8b5cf6; /* Purple-500 */
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.multi-select-button:hover {
+  background: #7c3aed; /* Purple-600 */
+  box-shadow: 0 3px 10px rgba(124, 58, 237, 0.4);
+  transform: translateY(-2px);
+}
+
+.multi-select-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.cancel-button {
+  background-color: #f0f0f0;
+  color: #333;
+  border: 1px solid #ddd;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.cancel-button:hover {
+  background-color: #e0e0e0;
+}
+
+.delete-multi-button {
+  background-color: #ff4d4f;
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;; /* Purple-500 */
+  border-radius: 8px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.delete-multi-button:hover {
+  background-color: #ff7875;
+}
+
+.delete-multi-button:disabled {
+  background-color: #ffccc7;
+  cursor: not-allowed;
+}
+
+.selection-checkbox {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 2;
+  color: #666;
+}
+
+.company-card.selected {
+  border: 2px solid #1890ff;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
+}
+
+/* Ajuste para o layout dos cards quando em modo de seleção */
+.company-card {
+  position: relative;
+}
+
+.company-card.selected .company-icon,
+.company-card.selected .company-content {
+  opacity: 0.8;
+}
