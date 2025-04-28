@@ -37,7 +37,7 @@ O Helper oferece uma interface intuitiva para:
 
 ## 🌐 Acesse Agora
 
-[Acessar Helper](https://helper-aut.netlify.app)
+[Acessar Helper] (https://help-v.vercel.app)
 
 ## 📄 Licença
 
