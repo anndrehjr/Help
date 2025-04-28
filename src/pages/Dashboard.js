@@ -1,21 +1,21 @@
-"use client"
+"use client";
 
-import { useState, useEffect } from "react"
-import { useNavigate } from "react-router-dom"
-import { Plus, Edit, Trash2, Upload } from 'lucide-react'
-import { useTheme } from "../contexts/ThemeContext"
-import Navbar from "../components/Navbar"
-import Toast from "../components/Toast"
-import "./Dashboard.css"
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import { Plus, Edit, Trash2, Upload } from "lucide-react";
+import { useTheme } from "../contexts/ThemeContext";
+import Navbar from "../components/Navbar";
+import Toast from "../components/Toast";
+import "./Dashboard.css";
 
 function Dashboard() {
-  const [userData, setUserData] = useState({ nome: "", empresa: "" })
-  const [company, setCompany] = useState(null)
-  const [customCards, setCustomCards] = useState([])
-  const [isModalOpen, setIsModalOpen] = useState(false)
-  const [isMultiCompanyModalOpen, setIsMultiCompanyModalOpen] = useState(false)
-  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false) // Novo estado para o modal de importação em lote
-  const [bulkCards, setBulkCards] = useState("") // Novo estado para armazenar o texto dos cards em lote
+  const [userData, setUserData] = useState({ nome: "", empresa: "" });
+  const [company, setCompany] = useState(null);
+  const [customCards, setCustomCards] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isMultiCompanyModalOpen, setIsMultiCompanyModalOpen] = useState(false);
+  const [isBulkImportOpen, setIsBulkImportOpen] = useState(false); // Novo estado para o modal de importação em lote
+  const [bulkCards, setBulkCards] = useState(""); // Novo estado para armazenar o texto dos cards em lote
   const [currentCard, setCurrentCard] = useState({
     id: null,
     title: "",
@@ -25,188 +25,199 @@ function Dashboard() {
     icon: "MessageSquare",
     multiCompany: false,
     companies: [],
-  })
-  const [toast, setToast] = useState({ show: false, message: "" })
-  const [isLoading, setIsLoading] = useState(true)
-  const [activeCategory, setActiveCategory] = useState("all")
-  const [searchTerm, setSearchTerm] = useState("")
-  const [deleteConfirmation, setDeleteConfirmation] = useState({ show: false, cardId: null })
-  const [userCompanies, setUserCompanies] = useState([])
-  const [selectedCompanies, setSelectedCompanies] = useState([])
-  const navigate = useNavigate()
-  const { isDarkMode } = useTheme()
+  });
+  const [toast, setToast] = useState({ show: false, message: "" });
+  const [isLoading, setIsLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [searchTerm, setSearchTerm] = useState("");
+  const [deleteConfirmation, setDeleteConfirmation] = useState({
+    show: false,
+    cardId: null,
+  });
+  const [userCompanies, setUserCompanies] = useState([]);
+  const [selectedCompanies, setSelectedCompanies] = useState([]);
+  const navigate = useNavigate();
+  const { isDarkMode } = useTheme();
 
   useEffect(() => {
     // Verificar se o usuário está logado
-    const currentUser = localStorage.getItem("currentUser")
+    const currentUser = localStorage.getItem("currentUser");
     if (!currentUser) {
-      navigate("/")
-      return
+      navigate("/");
+      return;
     }
 
     // Verificar se há uma empresa selecionada
-    const currentCompany = localStorage.getItem("currentCompany")
+    const currentCompany = localStorage.getItem("currentCompany");
     if (!currentCompany) {
-      navigate("/companies")
-      return
+      navigate("/companies");
+      return;
     }
 
-    const companyData = JSON.parse(currentCompany)
-    setCompany(companyData)
-    setUserData({ nome: currentUser, empresa: companyData.name })
+    const companyData = JSON.parse(currentCompany);
+    setCompany(companyData);
+    setUserData({ nome: currentUser, empresa: companyData.name });
 
     // Carregar todas as empresas do usuário
-    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-    const companies = allCompanies[currentUser] || []
-    setUserCompanies(companies)
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}");
+    const companies = allCompanies[currentUser] || [];
+    setUserCompanies(companies);
 
     // Carregar cards da empresa atual
-    const selectedCompany = companies.find((c) => c.id === companyData.id)
+    const selectedCompany = companies.find((c) => c.id === companyData.id);
     if (selectedCompany) {
       // Carregar cards específicos da empresa
-      const companyCards = selectedCompany.cards || []
+      const companyCards = selectedCompany.cards || [];
 
       // Carregar cards multi-empresa
-      const multiCompanyCards = []
+      const multiCompanyCards = [];
       companies.forEach((comp) => {
         if (comp.id !== companyData.id) {
           const multiCards = (comp.cards || []).filter(
-            (card) => card.multiCompany && card.companies.includes(companyData.id),
-          )
-          multiCompanyCards.push(...multiCards)
+            (card) =>
+              card.multiCompany && card.companies.includes(companyData.id)
+          );
+          multiCompanyCards.push(...multiCards);
         }
-      })
+      });
 
       // Combinar cards específicos e multi-empresa
-      setCustomCards([...companyCards, ...multiCompanyCards])
+      setCustomCards([...companyCards, ...multiCompanyCards]);
     }
 
     // Simular carregamento
     setTimeout(() => {
-      setIsLoading(false)
-    }, 800)
-  }, [navigate])
+      setIsLoading(false);
+    }, 800);
+  }, [navigate]);
 
   const changeCompany = (companyId) => {
-    const selectedCompany = userCompanies.find((c) => c.id === Number.parseInt(companyId))
+    const selectedCompany = userCompanies.find(
+      (c) => c.id === Number.parseInt(companyId)
+    );
     if (selectedCompany) {
       // Atualizar a empresa atual no localStorage
-      localStorage.setItem("currentCompany", JSON.stringify(selectedCompany))
-      setCompany(selectedCompany)
-      setUserData((prev) => ({ ...prev, empresa: selectedCompany.name }))
+      localStorage.setItem("currentCompany", JSON.stringify(selectedCompany));
+      setCompany(selectedCompany);
+      setUserData((prev) => ({ ...prev, empresa: selectedCompany.name }));
 
       // Carregar cards da nova empresa selecionada
-      const companyCards = selectedCompany.cards || []
+      const companyCards = selectedCompany.cards || [];
 
       // Carregar cards multi-empresa
-      const multiCompanyCards = []
+      const multiCompanyCards = [];
       userCompanies.forEach((comp) => {
         if (comp.id !== selectedCompany.id) {
           const multiCards = (comp.cards || []).filter(
-            (card) => card.multiCompany && card.companies.includes(selectedCompany.id),
-          )
-          multiCompanyCards.push(...multiCards)
+            (card) =>
+              card.multiCompany && card.companies.includes(selectedCompany.id)
+          );
+          multiCompanyCards.push(...multiCards);
         }
-      })
+      });
 
       // Combinar cards específicos e multi-empresa
-      setCustomCards([...companyCards, ...multiCompanyCards])
+      setCustomCards([...companyCards, ...multiCompanyCards]);
     }
-  }
+  };
 
   const processMessageVariables = (message) => {
     // Substituir variáveis no texto
-    return message.replace(/\{nome\}/g, userData.nome).replace(/\{empresa\}/g, userData.empresa)
-  }
+    return message
+      .replace(/\{nome\}/g, userData.nome)
+      .replace(/\{empresa\}/g, userData.empresa);
+  };
 
   const handleMessageClick = (type, customMessage = null, cardId = null) => {
-    let message = ""
+    let message = "";
     if (customMessage) {
-      message = processMessageVariables(customMessage)
+      message = processMessageVariables(customMessage);
 
       // Incrementar contador de uso se for um card personalizado
       if (cardId) {
         const updatedCards = customCards.map((card) => {
           if (card.id === cardId) {
-            return { ...card, usageCount: (card.usageCount || 0) + 1 }
+            return { ...card, usageCount: (card.usageCount || 0) + 1 };
           }
-          return card
-        })
+          return card;
+        });
 
-        setCustomCards(updatedCards)
+        setCustomCards(updatedCards);
 
         // Atualizar no localStorage
-        updateCardUsageCount(cardId)
+        updateCardUsageCount(cardId);
       }
     } else {
       switch (type) {
         case "manha":
-          message = `Bom dia! Aqui é o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`
-          break
+          message = `Bom dia! Aqui é o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`;
+          break;
         case "tarde":
-          message = `Boa tarde! Aqui é o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`
-          break
+          message = `Boa tarde! Aqui é o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`;
+          break;
         case "noite":
-          message = `Boa noite! Aqui é o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`
-          break
+          message = `Boa noite! Aqui é o ${userData.nome} do suporte da ${userData.empresa}, tudo bom?`;
+          break;
         case "duvida":
-          message = "Como posso ajudar?"
-          break
+          message = "Como posso ajudar?";
+          break;
         case "explica":
-          message = "Não consegui entender direito, poderia me explicar melhor? Se preferir pode mandar áudio."
-          break
+          message =
+            "Não consegui entender direito, poderia me explicar melhor? Se preferir pode mandar áudio.";
+          break;
         case "encerrar":
           message =
-            "Vou estar encerrando o chat aqui então, qualquer coisa estamos à disposição, tenha um ótimo dia! 😊"
-          break
+            "Vou estar encerrando o chat aqui então, qualquer coisa estamos à disposição, tenha um ótimo dia! 😊";
+          break;
         case "falta":
-          message = "Notei uma falta de comunicação, vou verificar o que aconteceu."
-          break
+          message =
+            "Notei uma falta de comunicação, vou verificar o que aconteceu.";
+          break;
         case "tecnica":
-          message = "Vou passar para nossa área técnica analisar."
-          break
+          message = "Vou passar para nossa área técnica analisar.";
+          break;
         default:
-          message = "Olá!"
+          message = "Olá!";
       }
     }
-    navigator.clipboard.writeText(message)
+    navigator.clipboard.writeText(message);
     setToast({
       show: true,
       message: "Copiado com sucesso!",
-    })
-  }
+    });
+  };
 
   const updateCardUsageCount = (cardId) => {
-    const currentUser = localStorage.getItem("currentUser")
-    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-    const userCompanies = allCompanies[currentUser] || []
+    const currentUser = localStorage.getItem("currentUser");
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}");
+    const userCompanies = allCompanies[currentUser] || [];
 
     // Encontrar o card em todas as empresas
-    let cardUpdated = false
+    let cardUpdated = false;
 
     const updatedCompanies = userCompanies.map((comp) => {
       const updatedCards = (comp.cards || []).map((card) => {
         if (card.id === cardId) {
-          cardUpdated = true
-          return { ...card, usageCount: (card.usageCount || 0) + 1 }
+          cardUpdated = true;
+          return { ...card, usageCount: (card.usageCount || 0) + 1 };
         }
-        return card
-      })
+        return card;
+      });
 
-      return { ...comp, cards: updatedCards }
-    })
+      return { ...comp, cards: updatedCards };
+    });
 
     if (cardUpdated) {
-      allCompanies[currentUser] = updatedCompanies
-      localStorage.setItem("companies", JSON.stringify(allCompanies))
+      allCompanies[currentUser] = updatedCompanies;
+      localStorage.setItem("companies", JSON.stringify(allCompanies));
 
       // Atualizar a empresa atual no localStorage
-      const updatedCompany = updatedCompanies.find((c) => c.id === company.id)
+      const updatedCompany = updatedCompanies.find((c) => c.id === company.id);
       if (updatedCompany) {
-        localStorage.setItem("currentCompany", JSON.stringify(updatedCompany))
+        localStorage.setItem("currentCompany", JSON.stringify(updatedCompany));
       }
     }
-  }
+  };
 
   const openModal = (card = null) => {
     if (card) {
@@ -220,7 +231,7 @@ function Dashboard() {
         icon: card.icon || "MessageSquare",
         multiCompany: card.multiCompany || false,
         companies: card.companies || [],
-      })
+      });
     } else {
       // Novo card
       setCurrentCard({
@@ -232,10 +243,10 @@ function Dashboard() {
         icon: "MessageSquare",
         multiCompany: false,
         companies: [],
-      })
+      });
     }
-    setIsModalOpen(true)
-  }
+    setIsModalOpen(true);
+  };
 
   const openMultiCompanyModal = () => {
     setCurrentCard({
@@ -247,19 +258,19 @@ function Dashboard() {
       icon: "MessageSquare",
       multiCompany: true,
       companies: [company.id],
-    })
-    setSelectedCompanies([company.id])
-    setIsMultiCompanyModalOpen(true)
-  }
+    });
+    setSelectedCompanies([company.id]);
+    setIsMultiCompanyModalOpen(true);
+  };
 
   // Função para abrir o modal de importação em lote
   const openBulkImportModal = () => {
-    setBulkCards("")
-    setIsBulkImportOpen(true)
-  }
+    setBulkCards("");
+    setIsBulkImportOpen(true);
+  };
 
   const closeModal = () => {
-    setIsModalOpen(false)
+    setIsModalOpen(false);
     setCurrentCard({
       id: null,
       title: "",
@@ -269,12 +280,12 @@ function Dashboard() {
       icon: "MessageSquare",
       multiCompany: false,
       companies: [],
-    })
-  }
+    });
+  };
 
   const closeMultiCompanyModal = () => {
-    setIsMultiCompanyModalOpen(false)
-    setSelectedCompanies([])
+    setIsMultiCompanyModalOpen(false);
+    setSelectedCompanies([]);
     setCurrentCard({
       id: null,
       title: "",
@@ -284,21 +295,21 @@ function Dashboard() {
       icon: "MessageSquare",
       multiCompany: false,
       companies: [],
-    })
-  }
+    });
+  };
 
   // Função para fechar o modal de importação em lote
   const closeBulkImportModal = () => {
-    setIsBulkImportOpen(false)
-    setBulkCards("")
-  }
+    setIsBulkImportOpen(false);
+    setBulkCards("");
+  };
 
   const saveCard = () => {
-    if (!currentCard.title.trim() || !currentCard.message.trim()) return
+    if (!currentCard.title.trim() || !currentCard.message.trim()) return;
 
-    const currentUser = localStorage.getItem("currentUser")
-    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-    const userCompanies = allCompanies[currentUser] || []
+    const currentUser = localStorage.getItem("currentUser");
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}");
+    const userCompanies = allCompanies[currentUser] || [];
 
     // Criar o novo card com todos os campos necessários
     const cardToSave = {
@@ -308,60 +319,71 @@ function Dashboard() {
       usageCount: currentCard.usageCount || 0,
       multiCompany: false,
       companies: [],
-    }
+    };
 
     // Atualizar os cards da empresa atual
     const updatedCompanies = userCompanies.map((comp) => {
       if (comp.id === company.id) {
-        let updatedCards
+        let updatedCards;
         if (currentCard.id) {
           // Editar card existente
-          updatedCards = (comp.cards || []).map((card) => (card.id === currentCard.id ? cardToSave : card))
+          updatedCards = (comp.cards || []).map((card) =>
+            card.id === currentCard.id ? cardToSave : card
+          );
         } else {
           // Adicionar novo card
-          updatedCards = [...(comp.cards || []), cardToSave]
+          updatedCards = [...(comp.cards || []), cardToSave];
         }
-        return { ...comp, cards: updatedCards }
+        return { ...comp, cards: updatedCards };
       }
-      return comp
-    })
+      return comp;
+    });
 
     // Atualizar no localStorage
-    allCompanies[currentUser] = updatedCompanies
-    localStorage.setItem("companies", JSON.stringify(allCompanies))
+    allCompanies[currentUser] = updatedCompanies;
+    localStorage.setItem("companies", JSON.stringify(allCompanies));
 
     // Atualizar a empresa atual no localStorage
-    const updatedCompany = updatedCompanies.find((c) => c.id === company.id)
-    localStorage.setItem("currentCompany", JSON.stringify(updatedCompany))
-    setCompany(updatedCompany)
+    const updatedCompany = updatedCompanies.find((c) => c.id === company.id);
+    localStorage.setItem("currentCompany", JSON.stringify(updatedCompany));
+    setCompany(updatedCompany);
 
     // Atualizar os cards na interface
-    const companyCards = updatedCompany.cards || []
+    const companyCards = updatedCompany.cards || [];
 
     // Carregar cards multi-empresa
-    const multiCompanyCards = []
+    const multiCompanyCards = [];
     updatedCompanies.forEach((comp) => {
       if (comp.id !== company.id) {
-        const multiCards = (comp.cards || []).filter((card) => card.multiCompany && card.companies.includes(company.id))
-        multiCompanyCards.push(...multiCards)
+        const multiCards = (comp.cards || []).filter(
+          (card) => card.multiCompany && card.companies.includes(company.id)
+        );
+        multiCompanyCards.push(...multiCards);
       }
-    })
+    });
 
-    setCustomCards([...companyCards, ...multiCompanyCards])
-    closeModal()
+    setCustomCards([...companyCards, ...multiCompanyCards]);
+    closeModal();
 
     setToast({
       show: true,
-      message: currentCard.id ? "Card atualizado com sucesso!" : "Card adicionado com sucesso!",
-    })
-  }
+      message: currentCard.id
+        ? "Card atualizado com sucesso!"
+        : "Card adicionado com sucesso!",
+    });
+  };
 
   const saveMultiCompanyCard = () => {
-    if (!currentCard.title.trim() || !currentCard.message.trim() || selectedCompanies.length === 0) return
+    if (
+      !currentCard.title.trim() ||
+      !currentCard.message.trim() ||
+      selectedCompanies.length === 0
+    )
+      return;
 
-    const currentUser = localStorage.getItem("currentUser")
-    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-    const userCompanies = allCompanies[currentUser] || []
+    const currentUser = localStorage.getItem("currentUser");
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}");
+    const userCompanies = allCompanies[currentUser] || [];
 
     // Criar o card multi-empresa
     const cardToSave = {
@@ -371,102 +393,108 @@ function Dashboard() {
       usageCount: 0,
       multiCompany: true,
       companies: selectedCompanies,
-    }
+    };
 
     // Determinar em qual empresa salvar o card
     // Vamos salvar na primeira empresa selecionada
-    const primaryCompanyId = selectedCompanies[0]
+    const primaryCompanyId = selectedCompanies[0];
 
     // Atualizar as empresas
     const updatedCompanies = userCompanies.map((comp) => {
       if (comp.id === primaryCompanyId) {
         // Adicionar o card multi-empresa à primeira empresa selecionada
-        const updatedCards = [...(comp.cards || []), cardToSave]
-        return { ...comp, cards: updatedCards }
+        const updatedCards = [...(comp.cards || []), cardToSave];
+        return { ...comp, cards: updatedCards };
       }
-      return comp
-    })
+      return comp;
+    });
 
     // Atualizar no localStorage
-    allCompanies[currentUser] = updatedCompanies
-    localStorage.setItem("companies", JSON.stringify(allCompanies))
+    allCompanies[currentUser] = updatedCompanies;
+    localStorage.setItem("companies", JSON.stringify(allCompanies));
 
     // Atualizar a empresa atual no localStorage se necessário
     if (primaryCompanyId === company.id) {
-      const updatedCompany = updatedCompanies.find((c) => c.id === company.id)
-      localStorage.setItem("currentCompany", JSON.stringify(updatedCompany))
-      setCompany(updatedCompany)
+      const updatedCompany = updatedCompanies.find((c) => c.id === company.id);
+      localStorage.setItem("currentCompany", JSON.stringify(updatedCompany));
+      setCompany(updatedCompany);
     }
 
     // Recarregar os cards na interface
-    const updatedCurrentCompany = updatedCompanies.find((c) => c.id === company.id)
-    const companyCards = updatedCurrentCompany.cards || []
+    const updatedCurrentCompany = updatedCompanies.find(
+      (c) => c.id === company.id
+    );
+    const companyCards = updatedCurrentCompany.cards || [];
 
     // Carregar cards multi-empresa
-    const multiCompanyCards = []
+    const multiCompanyCards = [];
     updatedCompanies.forEach((comp) => {
       if (comp.id !== company.id) {
-        const multiCards = (comp.cards || []).filter((card) => card.multiCompany && card.companies.includes(company.id))
-        multiCompanyCards.push(...multiCards)
+        const multiCards = (comp.cards || []).filter(
+          (card) => card.multiCompany && card.companies.includes(company.id)
+        );
+        multiCompanyCards.push(...multiCards);
       }
-    })
+    });
 
-    setCustomCards([...companyCards, ...multiCompanyCards])
-    closeMultiCompanyModal()
+    setCustomCards([...companyCards, ...multiCompanyCards]);
+    closeMultiCompanyModal();
 
     setToast({
       show: true,
       message: "Card multi-empresa adicionado com sucesso!",
-    })
-  }
+    });
+  };
 
   // Função para processar e salvar os cards em lote
   const saveBulkCards = () => {
-    if (!bulkCards.trim()) return
+    if (!bulkCards.trim()) return;
 
-    const currentUser = localStorage.getItem("currentUser")
-    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-    const userCompanies = allCompanies[currentUser] || []
+    const currentUser = localStorage.getItem("currentUser");
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}");
+    const userCompanies = allCompanies[currentUser] || [];
 
     // Dividir o texto em linhas
-    const lines = bulkCards.split("\n").filter(line => line.trim().length > 0)
-    
-    if (lines.length === 0) return
+    const lines = bulkCards
+      .split("\n")
+      .filter((line) => line.trim().length > 0);
+
+    if (lines.length === 0) return;
 
     // Array para armazenar os novos cards
-    const newCards = []
-    
+    const newCards = [];
+
     // Processar cada linha para criar um card
     for (let i = 0; i < lines.length; i++) {
-      const line = lines[i].trim()
-      
+      const line = lines[i].trim();
+
       // Verificar se a linha tem conteúdo
-      if (line.length === 0) continue
-      
+      if (line.length === 0) continue;
+
       // Extrair título e mensagem
       // O formato esperado é: "Título: Mensagem" ou apenas "Título"
-      let title, message
-      
+      let title, message;
+
       if (line.includes(":")) {
         // Se tiver ":", divide em título e mensagem
-        const parts = line.split(":")
-        title = parts[0].trim()
-        message = parts.slice(1).join(":").trim()
+        const parts = line.split(":");
+        title = parts[0].trim();
+        message = parts.slice(1).join(":").trim();
       } else {
         // Se não tiver ":", considera tudo como título
-        title = line
-        message = ""
+        title = line;
+        message = "";
       }
-      
+
       // Se não tiver título, pula
-      if (!title) continue
-      
+      if (!title) continue;
+
       // Se não tiver mensagem, verifica se a próxima linha pode ser a mensagem
       if (!message && i + 1 < lines.length && !lines[i + 1].includes(":")) {
-        message = lines[i + 1].trim()
-        i++ // Avança para pular a linha da mensagem
+        message = lines[i + 1].trim();
+        i++; // Avança para pular a linha da mensagem
       }
-      
+
       // Criar o novo card
       newCards.push({
         id: Date.now() + Math.floor(Math.random() * 1000) + i,
@@ -479,93 +507,99 @@ function Dashboard() {
         usageCount: 0,
         multiCompany: false,
         companies: [],
-      })
+      });
     }
-    
+
     if (newCards.length === 0) {
       setToast({
         show: true,
         message: "Nenhum card válido encontrado no texto.",
-      })
-      return
+      });
+      return;
     }
 
     // Atualizar os cards da empresa atual
     const updatedCompanies = userCompanies.map((comp) => {
       if (comp.id === company.id) {
         // Adicionar os novos cards à empresa atual
-        const updatedCards = [...(comp.cards || []), ...newCards]
-        return { ...comp, cards: updatedCards }
+        const updatedCards = [...(comp.cards || []), ...newCards];
+        return { ...comp, cards: updatedCards };
       }
-      return comp
-    })
+      return comp;
+    });
 
     // Atualizar no localStorage
-    allCompanies[currentUser] = updatedCompanies
-    localStorage.setItem("companies", JSON.stringify(allCompanies))
+    allCompanies[currentUser] = updatedCompanies;
+    localStorage.setItem("companies", JSON.stringify(allCompanies));
 
     // Atualizar a empresa atual no localStorage
-    const updatedCompany = updatedCompanies.find((c) => c.id === company.id)
-    localStorage.setItem("currentCompany", JSON.stringify(updatedCompany))
-    setCompany(updatedCompany)
+    const updatedCompany = updatedCompanies.find((c) => c.id === company.id);
+    localStorage.setItem("currentCompany", JSON.stringify(updatedCompany));
+    setCompany(updatedCompany);
 
     // Atualizar os cards na interface
-    const companyCards = updatedCompany.cards || []
+    const companyCards = updatedCompany.cards || [];
 
     // Carregar cards multi-empresa
-    const multiCompanyCards = []
+    const multiCompanyCards = [];
     updatedCompanies.forEach((comp) => {
       if (comp.id !== company.id) {
-        const multiCards = (comp.cards || []).filter((card) => card.multiCompany && card.companies.includes(company.id))
-        multiCompanyCards.push(...multiCards)
+        const multiCards = (comp.cards || []).filter(
+          (card) => card.multiCompany && card.companies.includes(company.id)
+        );
+        multiCompanyCards.push(...multiCards);
       }
-    })
+    });
 
-    setCustomCards([...companyCards, ...multiCompanyCards])
-    closeBulkImportModal()
+    setCustomCards([...companyCards, ...multiCompanyCards]);
+    closeBulkImportModal();
 
     setToast({
       show: true,
       message: `${newCards.length} cards importados com sucesso!`,
-    })
-  }
+    });
+  };
 
   const deleteCard = (id, e) => {
-    e.stopPropagation()
-    setDeleteConfirmation({ show: true, cardId: id })
-  }
+    e.stopPropagation();
+    setDeleteConfirmation({ show: true, cardId: id });
+  };
 
   const confirmDelete = () => {
-    const id = deleteConfirmation.cardId
+    const id = deleteConfirmation.cardId;
 
     // Encontrar o card para verificar se é multi-empresa
-    const cardToDelete = customCards.find((card) => card.id === id)
+    const cardToDelete = customCards.find((card) => card.id === id);
     if (!cardToDelete) {
-      setDeleteConfirmation({ show: false, cardId: null })
-      return
+      setDeleteConfirmation({ show: false, cardId: null });
+      return;
     }
 
-    const currentUser = localStorage.getItem("currentUser")
-    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-    const userCompanies = allCompanies[currentUser] || []
+    const currentUser = localStorage.getItem("currentUser");
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}");
+    const userCompanies = allCompanies[currentUser] || [];
 
     // Se for um card multi-empresa, precisamos removê-lo da empresa onde está armazenado
     if (cardToDelete.multiCompany) {
       // Encontrar a empresa que contém o card
       const ownerCompanyIndex = userCompanies.findIndex(
-        (comp) => comp.cards && comp.cards.some((card) => card.id === id && card.multiCompany),
-      )
+        (comp) =>
+          comp.cards &&
+          comp.cards.some((card) => card.id === id && card.multiCompany)
+      );
 
       if (ownerCompanyIndex !== -1) {
         // Remover o card da empresa proprietária
-        const updatedCompanies = [...userCompanies]
+        const updatedCompanies = [...userCompanies];
         updatedCompanies[ownerCompanyIndex] = {
           ...updatedCompanies[ownerCompanyIndex],
-          cards: updatedCompanies[ownerCompanyIndex].cards.filter((card) => card.id !== id),
-        }
+          cards: updatedCompanies[ownerCompanyIndex].cards.filter(
+            (card) => card.id !== id
+          ),
+        };
 
-        allCompanies[currentUser] = updatedCompanies
-        localStorage.setItem("companies", JSON.stringify(allCompanies))
+        allCompanies[currentUser] = updatedCompanies;
+        localStorage.setItem("companies", JSON.stringify(allCompanies));
       }
     } else {
       // Card normal, remover apenas da empresa atual
@@ -574,66 +608,68 @@ function Dashboard() {
           return {
             ...comp,
             cards: (comp.cards || []).filter((card) => card.id !== id),
-          }
+          };
         }
-        return comp
-      })
+        return comp;
+      });
 
-      allCompanies[currentUser] = updatedCompanies
-      localStorage.setItem("companies", JSON.stringify(allCompanies))
+      allCompanies[currentUser] = updatedCompanies;
+      localStorage.setItem("companies", JSON.stringify(allCompanies));
 
       // Atualizar a empresa atual no localStorage
-      const updatedCompany = updatedCompanies.find((c) => c.id === company.id)
-      localStorage.setItem("currentCompany", JSON.stringify(updatedCompany))
-      setCompany(updatedCompany)
+      const updatedCompany = updatedCompanies.find((c) => c.id === company.id);
+      localStorage.setItem("currentCompany", JSON.stringify(updatedCompany));
+      setCompany(updatedCompany);
     }
 
     // Atualizar os cards na interface
-    setCustomCards(customCards.filter((card) => card.id !== id))
+    setCustomCards(customCards.filter((card) => card.id !== id));
 
     // Fechar o modal de confirmação
-    setDeleteConfirmation({ show: false, cardId: null })
+    setDeleteConfirmation({ show: false, cardId: null });
 
     // Mostrar toast de confirmação
     setToast({
       show: true,
       message: "Card excluído com sucesso!",
-    })
-  }
+    });
+  };
 
   const cancelDelete = () => {
-    setDeleteConfirmation({ show: false, cardId: null })
-  }
+    setDeleteConfirmation({ show: false, cardId: null });
+  };
 
   const toggleFavorite = (id, e) => {
-    e.stopPropagation()
+    e.stopPropagation();
 
     // Encontrar o card para verificar se é multi-empresa
-    const cardToToggle = customCards.find((card) => card.id === id)
-    if (!cardToToggle) return
+    const cardToToggle = customCards.find((card) => card.id === id);
+    if (!cardToToggle) return;
 
-    const currentUser = localStorage.getItem("currentUser")
-    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}")
-    const userCompanies = allCompanies[currentUser] || []
+    const currentUser = localStorage.getItem("currentUser");
+    const allCompanies = JSON.parse(localStorage.getItem("companies") || "{}");
+    const userCompanies = allCompanies[currentUser] || [];
 
     if (cardToToggle.multiCompany) {
       // Encontrar a empresa que contém o card
       const ownerCompanyIndex = userCompanies.findIndex(
-        (comp) => comp.cards && comp.cards.some((card) => card.id === id && card.multiCompany),
-      )
+        (comp) =>
+          comp.cards &&
+          comp.cards.some((card) => card.id === id && card.multiCompany)
+      );
 
       if (ownerCompanyIndex !== -1) {
         // Atualizar o favorito no card da empresa proprietária
-        const updatedCompanies = [...userCompanies]
+        const updatedCompanies = [...userCompanies];
         updatedCompanies[ownerCompanyIndex] = {
           ...updatedCompanies[ownerCompanyIndex],
           cards: updatedCompanies[ownerCompanyIndex].cards.map((card) =>
-            card.id === id ? { ...card, favorite: !card.favorite } : card,
+            card.id === id ? { ...card, favorite: !card.favorite } : card
           ),
-        }
+        };
 
-        allCompanies[currentUser] = updatedCompanies
-        localStorage.setItem("companies", JSON.stringify(allCompanies))
+        allCompanies[currentUser] = updatedCompanies;
+        localStorage.setItem("companies", JSON.stringify(allCompanies));
       }
     } else {
       // Card normal, atualizar apenas na empresa atual
@@ -641,77 +677,90 @@ function Dashboard() {
         if (comp.id === company.id) {
           return {
             ...comp,
-            cards: (comp.cards || []).map((card) => (card.id === id ? { ...card, favorite: !card.favorite } : card)),
-          }
+            cards: (comp.cards || []).map((card) =>
+              card.id === id ? { ...card, favorite: !card.favorite } : card
+            ),
+          };
         }
-        return comp
-      })
+        return comp;
+      });
 
-      allCompanies[currentUser] = updatedCompanies
-      localStorage.setItem("companies", JSON.stringify(allCompanies))
+      allCompanies[currentUser] = updatedCompanies;
+      localStorage.setItem("companies", JSON.stringify(allCompanies));
 
       // Atualizar a empresa atual no localStorage
-      const updatedCompany = updatedCompanies.find((c) => c.id === company.id)
-      localStorage.setItem("currentCompany", JSON.stringify(updatedCompany))
-      setCompany(updatedCompany)
+      const updatedCompany = updatedCompanies.find((c) => c.id === company.id);
+      localStorage.setItem("currentCompany", JSON.stringify(updatedCompany));
+      setCompany(updatedCompany);
     }
 
     // Atualizar os cards na interface
-    setCustomCards(customCards.map((card) => (card.id === id ? { ...card, favorite: !card.favorite } : card)))
-  }
+    setCustomCards(
+      customCards.map((card) =>
+        card.id === id ? { ...card, favorite: !card.favorite } : card
+      )
+    );
+  };
 
   const handleCompanySelection = (companyId) => {
-    const id = Number(companyId)
+    const id = Number(companyId);
     if (selectedCompanies.includes(id)) {
-      setSelectedCompanies(selectedCompanies.filter((cid) => cid !== id))
+      setSelectedCompanies(selectedCompanies.filter((cid) => cid !== id));
     } else {
-      setSelectedCompanies([...selectedCompanies, id])
+      setSelectedCompanies([...selectedCompanies, id]);
     }
-  }
+  };
 
   const getFilteredCards = () => {
-    let filtered = customCards
+    let filtered = customCards;
 
     // Filtrar por categoria
     if (activeCategory !== "all") {
-      filtered = filtered.filter((card) => card.category === activeCategory)
+      filtered = filtered.filter((card) => card.category === activeCategory);
     }
 
     // Filtrar por termo de pesquisa
     if (searchTerm.trim() !== "") {
-      const term = searchTerm.toLowerCase()
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(
-        (card) => card.title.toLowerCase().includes(term) || card.message.toLowerCase().includes(term),
-      )
+        (card) =>
+          card.title.toLowerCase().includes(term) ||
+          card.message.toLowerCase().includes(term)
+      );
     }
 
-    return filtered
-  }
+    return filtered;
+  };
 
   useEffect(() => {
     const handleKeyDown = (e) => {
       // Tecla ESC (código ASCII 27)
       if (e.keyCode === 27) {
         if (isModalOpen) {
-          closeModal()
+          closeModal();
         }
         if (isMultiCompanyModalOpen) {
-          closeMultiCompanyModal()
+          closeMultiCompanyModal();
         }
         if (isBulkImportOpen) {
-          closeBulkImportModal()
+          closeBulkImportModal();
         }
         if (deleteConfirmation.show) {
-          cancelDelete()
+          cancelDelete();
         }
       }
-    }
+    };
 
-    window.addEventListener("keydown", handleKeyDown)
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
-      window.removeEventListener("keydown", handleKeyDown)
-    }
-  }, [isModalOpen, isMultiCompanyModalOpen, isBulkImportOpen, deleteConfirmation.show])
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [
+    isModalOpen,
+    isMultiCompanyModalOpen,
+    isBulkImportOpen,
+    deleteConfirmation.show,
+  ]);
 
   const categories = [
     { id: "all", name: "Todos" },
@@ -719,7 +768,7 @@ function Dashboard() {
     { id: "saudacao", name: "Saudações" },
     { id: "suporte", name: "Suporte" },
     { id: "encerramento", name: "Encerramento" },
-  ]
+  ];
 
   const defaultCards = [
     {
@@ -755,14 +804,16 @@ function Dashboard() {
       emoji: "🕵️",
       title: "Explique melhor",
       category: "suporte",
-      message: "Não consegui entender direito, poderia me explicar melhor? Se preferir pode mandar áudio.",
+      message:
+        "Não consegui entender direito, poderia me explicar melhor? Se preferir pode mandar áudio.",
     },
     {
       type: "encerrar",
       emoji: "👋",
       title: "Encerramento",
       category: "encerramento",
-      message: "Vou estar encerrando o chat aqui então, qualquer coisa estamos à disposição, tenha um ótimo dia! 😊",
+      message:
+        "Vou estar encerrando o chat aqui então, qualquer coisa estamos à disposição, tenha um ótimo dia! 😊",
     },
     {
       type: "falta",
@@ -778,7 +829,7 @@ function Dashboard() {
       category: "suporte",
       message: "Vou passar para nossa área técnica analisar.",
     },
-  ]
+  ];
 
   return (
     <div className={`dashboard-container ${isDarkMode ? "dark" : "light"}`}>
@@ -812,7 +863,9 @@ function Dashboard() {
             {categories.map((category) => (
               <button
                 key={category.id}
-                className={`category-button ${activeCategory === category.id ? "active" : ""}`}
+                className={`category-button ${
+                  activeCategory === category.id ? "active" : ""
+                }`}
                 onClick={() => setActiveCategory(category.id)}
               >
                 {category.name}
@@ -821,11 +874,17 @@ function Dashboard() {
           </div>
 
           <div className="card-actions-container">
-            <button onClick={openBulkImportModal} className="bulk-import-button">
+            <button
+              onClick={openBulkImportModal}
+              className="bulk-import-button"
+            >
               <Upload size={16} className="icon-left" />
               Importar Cards em Lote
             </button>
-            <button onClick={openMultiCompanyModal} className="multi-company-button">
+            <button
+              onClick={openMultiCompanyModal}
+              className="multi-company-button"
+            >
               Criar Card Multi-Empresa
             </button>
           </div>
@@ -836,7 +895,10 @@ function Dashboard() {
         </div>
         <div className={`message-grid ${isLoading ? "loading" : "loaded"}`}>
           {defaultCards
-            .filter((card) => activeCategory === "all" || card.category === activeCategory)
+            .filter(
+              (card) =>
+                activeCategory === "all" || card.category === activeCategory
+            )
             .map((card) => (
               <div
                 key={card.type}
@@ -846,7 +908,9 @@ function Dashboard() {
                 <div className="message-content">
                   <span className="message-emoji">{card.emoji}</span>
                   <span className="message-text">{card.title}</span>
-                  <span className="message-category">{categories.find((c) => c.id === card.category)?.name}</span>
+                  <span className="message-category">
+                    {categories.find((c) => c.id === card.category)?.name}
+                  </span>
                 </div>
               </div>
             ))}
@@ -859,26 +923,36 @@ function Dashboard() {
           {getFilteredCards().map((card) => (
             <div
               key={card.id}
-              className={`message-card custom-card ${card.favorite ? "favorite" : ""} ${card.multiCompany ? "multi-company" : ""}`}
+              className={`message-card custom-card ${
+                card.favorite ? "favorite" : ""
+              } ${card.multiCompany ? "multi-company" : ""}`}
               style={{
                 borderTop: `3px solid ${card.color || "#8b5cf6"}`,
                 background: `linear-gradient(to bottom, ${card.color}10, transparent)`,
               }}
             >
-              <div className="message-content" onClick={() => handleMessageClick("custom", card.message, card.id)}>
+              <div
+                className="message-content"
+                onClick={() =>
+                  handleMessageClick("custom", card.message, card.id)
+                }
+              >
                 <div className="card-header">
-                  <span className="message-text">{card.title}</span>
-                  {card.favorite && <span className="favorite-badge">★</span>}
-                  {card.multiCompany && <span className="multi-company-badge">🔄</span>}
+                  {/* Primeira linha: ícones */}
+                  {card.favorite && <span className="favorite-badge">★</span>}                 
                 </div>
-                <div className="message-preview">{card.message.substring(0, 50)}...</div>
+                <div className="card-title">
+                  {/* Segunda linha: título */}
+                  <span className="message-text">{card.title}</span>
+                </div>
                 <div className="card-footer">
                   <span className="message-category">
-                    {categories.find((c) => c.id === card.category)?.name || "Geral"}
+                    {categories.find((c) => c.id === card.category)?.name ||
+                      "Geral"}
                   </span>
-                  {card.usageCount > 0 && <span className="usage-count">Usado: {card.usageCount}x</span>}
                 </div>
               </div>
+
               <div className="card-actions">
                 <button
                   onClick={(e) => toggleFavorite(card.id, e)}
@@ -888,14 +962,17 @@ function Dashboard() {
                 </button>
                 <button
                   onClick={(e) => {
-                    e.stopPropagation()
-                    openModal(card)
+                    e.stopPropagation();
+                    openModal(card);
                   }}
                   className="edit-button"
                 >
                   <Edit size={16} />
                 </button>
-                <button onClick={(e) => deleteCard(card.id, e)} className="delete-button">
+                <button
+                  onClick={(e) => deleteCard(card.id, e)}
+                  className="delete-button"
+                >
                   <Trash2 size={16} />
                 </button>
               </div>
@@ -917,7 +994,10 @@ function Dashboard() {
 
             <div className="form-group">
               <label>
-                Título <span className="char-count">{currentCard.title.length}/20</span>
+                Título{" "}
+                <span className="char-count">
+                  {currentCard.title.length}/20
+                </span>
               </label>
               <input
                 type="text"
@@ -925,7 +1005,7 @@ function Dashboard() {
                 value={currentCard.title}
                 onChange={(e) => {
                   if (e.target.value.length <= 20) {
-                    setCurrentCard({ ...currentCard, title: e.target.value })
+                    setCurrentCard({ ...currentCard, title: e.target.value });
                   }
                 }}
                 maxLength={20}
@@ -934,21 +1014,25 @@ function Dashboard() {
 
             <div className="form-group">
               <label>
-                Mensagem <span className="char-count">{currentCard.message.length}/500</span>
+                Mensagem{" "}
+                <span className="char-count">
+                  {currentCard.message.length}/500
+                </span>
               </label>
               <textarea
                 placeholder="Mensagem (use {nome} e {empresa} como variáveis)"
                 value={currentCard.message}
                 onChange={(e) => {
                   if (e.target.value.length <= 500) {
-                    setCurrentCard({ ...currentCard, message: e.target.value })
+                    setCurrentCard({ ...currentCard, message: e.target.value });
                   }
                 }}
                 maxLength={500}
                 rows={4}
               />
               <div className="variables-help">
-                Variáveis disponíveis: {"{nome}"} - Nome do usuário, {"{empresa}"} - Nome da empresa
+                Variáveis disponíveis: {"{nome}"} - Nome do usuário,{" "}
+                {"{empresa}"} - Nome da empresa
               </div>
             </div>
 
@@ -957,7 +1041,9 @@ function Dashboard() {
                 <label>Categoria</label>
                 <select
                   value={currentCard.category}
-                  onChange={(e) => setCurrentCard({ ...currentCard, category: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentCard({ ...currentCard, category: e.target.value })
+                  }
                 >
                   {categories
                     .filter((c) => c.id !== "all")
@@ -967,16 +1053,6 @@ function Dashboard() {
                       </option>
                     ))}
                 </select>
-              </div>
-
-              <div className="form-group">
-                <label>Cor</label>
-                <input
-                  type="color"
-                  value={currentCard.color || "#8b5cf6"}
-                  onChange={(e) => setCurrentCard({ ...currentCard, color: e.target.value })}
-                  className="color-picker"
-                />
               </div>
             </div>
 
@@ -996,7 +1072,10 @@ function Dashboard() {
 
             <div className="form-group">
               <label>
-                Título <span className="char-count">{currentCard.title.length}/20</span>
+                Título{" "}
+                <span className="char-count">
+                  {currentCard.title.length}/20
+                </span>
               </label>
               <input
                 type="text"
@@ -1004,7 +1083,7 @@ function Dashboard() {
                 value={currentCard.title}
                 onChange={(e) => {
                   if (e.target.value.length <= 20) {
-                    setCurrentCard({ ...currentCard, title: e.target.value })
+                    setCurrentCard({ ...currentCard, title: e.target.value });
                   }
                 }}
                 maxLength={20}
@@ -1013,21 +1092,25 @@ function Dashboard() {
 
             <div className="form-group">
               <label>
-                Mensagem <span className="char-count">{currentCard.message.length}/500</span>
+                Mensagem{" "}
+                <span className="char-count">
+                  {currentCard.message.length}/500
+                </span>
               </label>
               <textarea
                 placeholder="Mensagem (use {nome} e {empresa} como variáveis)"
                 value={currentCard.message}
                 onChange={(e) => {
                   if (e.target.value.length <= 500) {
-                    setCurrentCard({ ...currentCard, message: e.target.value })
+                    setCurrentCard({ ...currentCard, message: e.target.value });
                   }
                 }}
                 maxLength={500}
                 rows={4}
               />
               <div className="variables-help">
-                Variáveis disponíveis: {"{nome}"} - Nome do usuário, {"{empresa}"} - Nome da empresa
+                Variáveis disponíveis: {"{nome}"} - Nome do usuário,{" "}
+                {"{empresa}"} - Nome da empresa
               </div>
             </div>
 
@@ -1036,7 +1119,9 @@ function Dashboard() {
                 <label>Categoria</label>
                 <select
                   value={currentCard.category}
-                  onChange={(e) => setCurrentCard({ ...currentCard, category: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentCard({ ...currentCard, category: e.target.value })
+                  }
                 >
                   {categories
                     .filter((c) => c.id !== "all")
@@ -1053,7 +1138,9 @@ function Dashboard() {
                 <input
                   type="color"
                   value={currentCard.color || "#8b5cf6"}
-                  onChange={(e) => setCurrentCard({ ...currentCard, color: e.target.value })}
+                  onChange={(e) =>
+                    setCurrentCard({ ...currentCard, color: e.target.value })
+                  }
                   className="color-picker"
                 />
               </div>
@@ -1078,7 +1165,10 @@ function Dashboard() {
 
             <div className="modal-actions">
               <button onClick={closeMultiCompanyModal}>Cancelar</button>
-              <button onClick={saveMultiCompanyCard} disabled={selectedCompanies.length === 0}>
+              <button
+                onClick={saveMultiCompanyCard}
+                disabled={selectedCompanies.length === 0}
+              >
                 Salvar
               </button>
             </div>
@@ -1122,7 +1212,10 @@ function Dashboard() {
 
       {deleteConfirmation.show && (
         <div className="modal-overlay" onClick={cancelDelete}>
-          <div className="modal delete-modal" onClick={(e) => e.stopPropagation()}>
+          <div
+            className="modal delete-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
             <h2>Excluir Card</h2>
             <p>Tem certeza que deseja excluir este card?</p>
             <div className="modal-actions">
@@ -1137,10 +1230,15 @@ function Dashboard() {
       )}
 
       <div className="toast-list">
-        {toast.show && <Toast message={toast.message} onClose={() => setToast({ ...toast, show: false })} />}
+        {toast.show && (
+          <Toast
+            message={toast.message}
+            onClose={() => setToast({ ...toast, show: false })}
+          />
+        )}
       </div>
     </div>
-  )
+  );
 }
 
-export default Dashboard
+export default Dashboard;

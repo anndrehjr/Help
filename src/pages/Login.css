@@ -246,6 +246,21 @@
   box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.3);
 }
 
+.error-message {
+  background-color: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  padding: 0.75rem;
+  border-radius: 8px;
+  text-align: center;
+  font-size: 0.9rem;
+  border-left: 3px solid #ef4444;
+}
+
+.dark .error-message {
+  background-color: rgba(239, 68, 68, 0.15);
+  color: #fca5a5;
+}
+
 .form-footer {
   display: flex;
   justify-content: space-between;
@@ -292,21 +307,6 @@
   background: #7c3aed; /* Purple-600 */
   box-shadow: 0 3px 10px rgba(124, 58, 237, 0.4);
   transform: rotate(15deg);
-}
-
-.error-message {
-  background-color: rgba(239, 68, 68, 0.1);
-  color: #ef4444;
-  padding: 0.75rem;
-  border-radius: 8px;
-  text-align: center;
-  font-size: 0.9rem;
-  border-left: 3px solid #ef4444;
-}
-
-.dark .error-message {
-  background-color: rgba(239, 68, 68, 0.15);
-  color: #fca5a5;
 }
 
 @media (max-width: 480px) {
