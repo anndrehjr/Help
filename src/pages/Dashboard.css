@@ -865,8 +865,8 @@
 }
 
 .dark .modal-actions button:first-child {
-  background: #4b5563;
-  color: white;
+  background: #ffffff;
+  color: rgb(0, 0, 0);
 }
 
 .dark .modal-actions button:last-child {
