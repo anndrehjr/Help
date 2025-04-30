@@ -10,7 +10,7 @@
 
 .login-container.light {
   background-color: #f9fafb; /* Gray-50 */
-  background-image: url(/public/image.png);
+  background-image: linear-gradient(to bottom right, #f9fafb, #e5e7eb);
   background-repeat: no-repeat;
   background-size: cover;
   background-position: center;
